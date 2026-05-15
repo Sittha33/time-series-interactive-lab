@@ -47,7 +47,7 @@
 <li>Squared-return ACF has significant positive bars (unlike return ACF which is near zero).</li>
 <li>α₁ near 1 ⇒ explosive variance; α₁ ≥ 1 ⇒ unstable.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"GARCH/ARCH predicts whether the market will go up tomorrow."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>ARCH/GARCH forecast VARIANCE (risk magnitude), not the sign of returns. Returns themselves may be ≈ white noise in the conditional mean.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>"Conditional variance ĥ_{t+1} = α₀ + α₁ ε̂_t². Use for VaR, option pricing, position sizing — not direction."</p></div></section>

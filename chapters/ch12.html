@@ -48,7 +48,7 @@
 <li>For h &gt; 1, the series returns to its baseline — finite memory.</li>
 <li>ACF should be near zero beyond lag 1 (MA(1) signature).</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"MA model means I'm modeling a moving-average smoother."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>The MA in MA(q) refers to past SHOCKS in a stochastic model, not the descriptive smoothing operation from Ch 5. Different concept entirely.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>MA(q) is a stochastic process: y_t = ε_t + θ_1 ε_{t-1} + … + θ_q ε_{t-q}.</p></div></section>

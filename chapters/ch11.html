@@ -49,7 +49,7 @@
 <li>Forecast intervals widen and saturate at the unconditional variance.</li>
 <li>PACF should have a single significant spike at lag 1 (AR(1) signature).</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"φ = 0.99 is stationary, so it behaves like any other AR(1)."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>Near-unit-root persistence creates very long-lived shocks, near-non-stationary inference, and unreliable standard asymptotic properties.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Treat |φ| close to 1 as "near-integrated" — use robust inference, expect long half-lives, and consider unit-root testing.</p></div></section>

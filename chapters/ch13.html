@@ -46,7 +46,7 @@
 <li>Check residuals after fitting: should be white noise (Ljung-Box p &gt; 0.05).</li>
 <li>If both ACF and PACF cut sharply, consider pure AR or MA instead.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"My ARMA(2,2) has the lowest AIC — must be best."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>Lowest AIC alone is insufficient; you must also check residual diagnostics (Ljung-Box, ARCH LM). Diagnostics override IC.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Pick the lowest-IC model whose residuals pass diagnostics. Prefer parsimony when ties are close.</p></div></section>

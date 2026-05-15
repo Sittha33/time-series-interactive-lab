@@ -10,7 +10,7 @@ An interactive, fully-static educational website for a master's-level Applied Ti
 - An interactive simulator (sliders + live Plotly charts)
 - A formula box rendered by MathJax
 - Diagnostic interpretation and "what the professor may ask" notes
-- An "exam trap" card flagging common student misconceptions
+- An "Pro Tip: What to Avoid" card flagging common student misconceptions
 - A mini quiz with instant feedback
 - A summary Key Takeaways table
 

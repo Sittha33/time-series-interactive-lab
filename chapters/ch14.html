@@ -52,7 +52,7 @@
 <li>Forecast in LEVELS continues the trend (random walk-like for d=1).</li>
 <li>Always validate (p,q) on the differenced (stationary) series.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"The I in ARIMA means 'interactive'."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>The I means INTEGRATED — specifically, the series has been differenced d times to achieve stationarity.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>ARIMA(p,d,q) = ARMA(p,q) on the d-th difference of y. Always determine d FIRST (ADF + KPSS), then identify p,q.</p></div></section>

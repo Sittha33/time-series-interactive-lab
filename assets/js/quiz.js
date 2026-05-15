@@ -74,6 +74,22 @@
     score.className = 'score-bar';
     root.appendChild(score);
 
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Reset Quiz';
+    resetBtn.style.marginTop = '12px';
+    resetBtn.style.padding = '6px 12px';
+    resetBtn.style.borderRadius = '8px';
+    resetBtn.style.border = '1px solid var(--line)';
+    resetBtn.style.background = 'var(--soft)';
+    resetBtn.style.color = 'var(--ink)';
+    resetBtn.style.cursor = 'pointer';
+    resetBtn.style.fontSize = '0.9rem';
+    resetBtn.addEventListener('click', () => {
+      global.TSL.saveState('quiz.' + (chapterKey || 'unknown'), {});
+      render(rootSel, questions, chapterKey);
+    });
+    root.appendChild(resetBtn);
+
     function updateScore() {
       attempted = 0; correct = 0;
       questions.forEach((q, idx) => {

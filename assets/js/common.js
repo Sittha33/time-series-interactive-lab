@@ -118,14 +118,10 @@
     f.className = 'page-footer';
     f.style.display = 'block';
     f.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
         <div>${prevHref ? `<a href="${prevHref}">← Ch ${c - 1}</a>` : '<span class="muted">— start —</span>'}</div>
         <div class="muted">Applied Time Series Interactive Lab</div>
         <div>${nextHref ? `<a href="${nextHref}">Ch ${c + 1} →</a>` : '<span class="muted">— end —</span>'}</div>
-      </div>
-      <div class="muted" style="text-align: center; font-size: 0.85em; max-width: 800px; margin: 0 auto; line-height: 1.6;">
-        <strong>Credits</strong><br>
-        Built for master's-level Applied Time Series Course. Special thanks to Professor Dr. Yong Yoon (Chulalongkorn University), whose teachings and insights inspired the creation of this interactive lab.
       </div>
     `;
     document.body.appendChild(f);

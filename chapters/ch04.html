@@ -59,7 +59,7 @@
   <li>Outlier? → additive outlier dummy; don't delete.</li>
 </ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"My ARIMA has low AIC and white residuals, so it's a good model."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>If the series has a visible structural break the student ignored, the "good" model is fitting a process that no longer exists. AIC and diagnostics can't fix a missed regime change.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Always plot first. Visible features force model-class choices that no information criterion can correct after the fact.</p></div>

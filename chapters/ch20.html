@@ -49,7 +49,7 @@
 <li>Independent: spread wanders just like the levels — no equilibrium force.</li>
 <li>High R² in levels means little if residuals are non-stationary.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"R² = 0.98 ⇒ cointegrated."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>High R² in levels regression is necessary but NOT sufficient. The test is on residual stationarity, not on fit.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Run Engle-Granger ADF on residuals (use shifted critical values). Stationary residuals ⇒ cointegration. Then estimate ECM.</p></div></section>

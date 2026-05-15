@@ -48,7 +48,7 @@
 <li>Larger k or smaller α exaggerates the lag.</li>
 <li>Smoothing is descriptive — use a real forecasting model (e.g., AR or ETS) to make predictions.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"Bigger window is always better because the line looks cleaner."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>A larger window over-smooths and hides exactly the turning points you want to detect (recessions, regime shifts).</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Choose window k for the lag tolerance you have. Validate on out-of-sample turning-point detection, not visual smoothness.</p></div></section>

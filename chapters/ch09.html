@@ -50,7 +50,7 @@
 <li>If both keep going, use ARMA — pick by AIC/BIC.</li>
 <li>Confidence band ±1.96/√n; spikes inside it are noise.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"ACF spike at lag 2 → it's AR(2)."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>ACF spike alone doesn't identify AR. AR(p) is characterized by PACF cutoff at lag p, not by an ACF spike. Could be MA(2) instead.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Use ACF and PACF TOGETHER. AR ↔ PACF cutoff. MA ↔ ACF cutoff.</p></div></section>

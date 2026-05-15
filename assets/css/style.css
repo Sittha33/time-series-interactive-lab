@@ -272,7 +272,7 @@ a:hover { text-decoration: underline; }
 .formula-box .symbol-list span { color: var(--muted); }
 .formula-box .symbol-list strong { color: var(--ink); }
 
-/* ---------- Exam trap ---------- */
+/* ---------- Pro Tip: What to Avoid ---------- */
 .exam-trap {
   background: var(--warn-bg);
   border: 1px solid var(--warn-bd);

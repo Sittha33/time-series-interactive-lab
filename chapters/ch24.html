@@ -48,7 +48,7 @@
 <li>Negative α brings y back to equilibrium after shocks.</li>
 <li>Rank 0 → use VAR in differences. Rank k → series already stationary (VAR in levels).</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"All variables are I(1) so I'll fit VAR in differences."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>Differencing throws away long-run cointegrating information. Always TEST for cointegration first (Johansen). If r ≥ 1, fit VECM.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Workflow: (1) ADF/KPSS on each variable. (2) Johansen trace + max-eigenvalue tests. (3) Choose VAR / VAR-diff / VECM based on rank.</p></div></section>

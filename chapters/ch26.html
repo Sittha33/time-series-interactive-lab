@@ -52,7 +52,7 @@
 <li>Forecast horizon: variance reverts geometrically to long-run mean.</li>
 <li>α+β = 0.98 ⇒ shocks ~ 34 periods to halve (slow). α+β = 0.6 ⇒ shocks decay quickly.</li></ul></section>
 
-<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<section class="exam-trap"><h3>⚠️ Pro Tip: What to Avoid</h3>
 <div class="trap-block wrong"><div class="label">Student says</div><p>"α + β ≈ 0.99 means volatility decays fast."</p></div>
 <div class="trap-block why"><div class="label">Why this is wrong</div><p>α + β CLOSE TO 1 means VERY SLOW decay (long memory). At α+β = 0.99, half-life is ~69 periods. Variance only mean-reverts when α+β &lt; 1, and the closer to 1, the slower.</p></div>
 <div class="trap-block right"><div class="label">Correct interpretation</div><p>Half-life = ln(0.5)/ln(α+β). Use this to communicate volatility persistence in actual horizon units.</p></div></section>
