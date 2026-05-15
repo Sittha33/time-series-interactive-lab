@@ -6,14 +6,14 @@
   'use strict';
 
   const COMMON_LAYOUT = {
-    margin: { l: 50, r: 20, t: 40, b: 70 },
+    margin: { l: 50, r: 20, t: 65, b: 70 },
     paper_bgcolor: '#ffffff',
     plot_bgcolor: '#ffffff',
     font: { family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', size: 12, color: '#0f172a' },
     xaxis: { gridcolor: '#e5e7eb', linecolor: '#cbd5e1', zerolinecolor: '#94a3b8' },
     yaxis: { gridcolor: '#e5e7eb', linecolor: '#cbd5e1', zerolinecolor: '#94a3b8' },
     showlegend: true,
-    legend: { orientation: 'h', x: 0, y: 1.12, yanchor: 'bottom' }
+    legend: { orientation: 'h', x: 0.5, xanchor: 'center', y: 1.05, yanchor: 'bottom' }
   };
   const COMMON_CONFIG = { responsive: true, displayModeBar: false };
 
