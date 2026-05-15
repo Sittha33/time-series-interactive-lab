@@ -12,7 +12,7 @@ An interactive, fully-static educational website for a master's-level Applied Ti
 - Diagnostic interpretation and "what the professor may ask" notes
 - An "exam trap" card flagging common student misconceptions
 - A mini quiz with instant feedback
-- A summary cheat sheet table
+- A summary Key Takeaways table
 
 ## How to run
 
