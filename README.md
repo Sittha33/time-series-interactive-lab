@@ -76,4 +76,4 @@ This project is for educational purposes only. The simulators illustrate textboo
 
 ## Credits
 
-Built for master's-level Applied Time Series exam preparation. Special thanks to Professor Dr. Yong Yoon (Chulalongkorn University), whose teachings and insights inspired the creation of this interactive lab.
+Built for master's-level Applied Time Series Course. Special thanks to Professor Dr. Yong Yoon (Chulalongkorn University), whose teachings and insights inspired the creation of this interactive lab.
