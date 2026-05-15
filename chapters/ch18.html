@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 18: ARDL — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VI · Chapter 18</div>
+<h1>Dynamic Regression & ARDL Models</h1>
+<p class="intuition">Short-run impact ≠ long-run multiplier. Lagged dependent and lagged independent terms allow the response to a shock to unfold over time.</p>
+<div class="key-formula">\( y_t = \alpha + \phi y_{t-1} + \beta_0 x_t + \beta_1 x_{t-1} + u_t \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute short-run vs long-run multipliers.</div>
+<div class="objective">Trace the dynamic response of y to a unit shock in x.</div>
+<div class="objective">Recognize stability condition |φ| &lt; 1.</div>
+<div class="objective">Distinguish ARDL from static OLS.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Long-Run Multiplier Lab</h3>
+<label>β₀ (instant impact) <span class="slider-row"><span></span><span class="val" id="vB0">0.4</span><span></span></span></label>
+<input type="range" id="b0" min="-1" max="1" step="0.05" value="0.4">
+<label>β₁ (one-lag impact) <span class="slider-row"><span></span><span class="val" id="vB1">0.2</span><span></span></span></label>
+<input type="range" id="b1" min="-1" max="1" step="0.05" value="0.2">
+<label>β₂ (two-lag impact) <span class="slider-row"><span></span><span class="val" id="vB2">0.1</span><span></span></span></label>
+<input type="range" id="b2" min="-1" max="1" step="0.05" value="0.1">
+<label>φ (AR coef on y) <span class="slider-row"><span></span><span class="val" id="vP">0.5</span><span></span></span></label>
+<input type="range" id="phi" min="-0.9" max="0.95" step="0.01" value="0.5">
+<label>Shock size <span class="slider-row"><span></span><span class="val" id="vS">1.0</span><span></span></span></label>
+<input type="range" id="sh" min="0" max="5" step="0.1" value="1">
+<button id="regen">🔄 Recompute</button></div>
+<div class="chart-panel"><div id="chart" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Multipliers</h3>
+<div class="live-readout"><strong>Short-run (β₀):</strong> <span class="num" id="rSR">—</span></div>
+<div class="live-readout"><strong>Cumulative (3-period):</strong> <span class="num" id="rC3">—</span></div>
+<div class="live-readout"><strong>Long-run multiplier:</strong> <span class="num" id="rLR">—</span></div>
+<p class="muted">LR = (β₀+β₁+β₂) / (1−φ). Requires |φ|&lt;1.</p></div></section>
+
+<section class="formula-box"><h3>📐 ARDL(1,2)</h3>
+<div class="formula-line">\[ y_t = \alpha + \phi y_{t-1} + \beta_0 x_t + \beta_1 x_{t-1} + \beta_2 x_{t-2} + u_t \]</div>
+<div class="formula-line">\[ \text{Long-run multiplier} = \frac{\beta_0+\beta_1+\beta_2}{1-\phi} \]</div>
+<div class="symbol-list">
+<div><strong>β₀</strong> <span>instant impact</span></div>
+<div><strong>β_j</strong> <span>impact j periods later</span></div>
+<div><strong>φ</strong> <span>persistence of y</span></div>
+<div><strong>Stability</strong> <span>|φ| &lt; 1</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Pulse shock at t=10 propagates through both immediate β₀ and lagged β₁, β₂.</li>
+<li>The y response decays through the persistence channel (φ y_{t-1}).</li>
+<li>Sum of lagged β / (1−φ) gives the EVENTUAL response to a permanent change in x.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"β₀ is the effect of x on y."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>β₀ is ONLY the immediate effect. The full long-run effect accumulates through lagged x AND lagged y persistence.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Report short-run (β₀), cumulative-h-period, and long-run multiplier separately.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Effect</th><th>Formula</th></tr></thead><tbody>
+<tr><td>Short-run</td><td>β₀</td></tr>
+<tr><td>3-period cumulative</td><td>β₀ + β₁ + β₂</td></tr>
+<tr><td>Long-run</td><td>(Σβ) / (1 − φ)</td></tr>
+<tr><td>Stability</td><td>|φ| &lt; 1</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(18); TSL.buildFooter(18);
+function refresh(){
+  const b0=parseFloat(TSL.$('#b0').value), b1=parseFloat(TSL.$('#b1').value), b2=parseFloat(TSL.$('#b2').value);
+  const phi=parseFloat(TSL.$('#phi').value), sh=parseFloat(TSL.$('#sh').value);
+  TSL.$('#vB0').textContent=b0.toFixed(2); TSL.$('#vB1').textContent=b1.toFixed(2);
+  TSL.$('#vB2').textContent=b2.toFixed(2); TSL.$('#vP').textContent=phi.toFixed(2);
+  TSL.$('#vS').textContent=sh.toFixed(2);
+  const lr = Math.abs(phi)<1 ? (b0+b1+b2)/(1-phi) : NaN;
+  TSL.$('#rSR').textContent=(b0*sh).toFixed(3);
+  TSL.$('#rC3').textContent=((b0+b1+b2)*sh).toFixed(3);
+  TSL.$('#rLR').textContent=isFinite(lr) ? (lr*sh).toFixed(3) : 'unstable';
+  const n=60, x=new Array(n).fill(0); x[10]=sh; // pulse
+  const xPerm=new Array(n).fill(0); for (let i=15;i<n;i++) xPerm[i]=sh; // step
+  function sim(xs){
+    const y=new Array(n).fill(0);
+    for (let t=2;t<n;t++) y[t]=phi*y[t-1] + b0*xs[t] + b1*xs[t-1] + b2*xs[t-2];
+    return y;
+  }
+  const yPulse = sim(x), yStep = sim(xPerm);
+  TSL.plotMultiLine('chart', [
+    { y: x, name: 'x (pulse at t=10)', color: '#94a3b8' },
+    { y: yPulse, name: 'y response (pulse)', color: '#2563eb' },
+    { y: yStep, name: 'y response (permanent step from t=15)', color: '#b45309', dash: 'dash' }
+  ], 'ARDL dynamic response', 'value');
+}
+['b0','b1','b2','phi','sh'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', refresh);
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Long-run multiplier for ARDL(1,1) is:', options: ['β₀','β₀+β₁','(β₀+β₁)/(1−φ)','φ/(1−β₀)'], correct: 2, explain: 'Standard ARDL formula.' },
+  { q: 'If φ = 1 (boundary), the long-run multiplier is:', options: ['0','Finite','Undefined / infinite','Negative'], correct: 2, explain: 'Denominator 1−φ = 0 ⇒ blows up.' },
+  { q: 'Short-run = long-run when:', options: ['β₀ = 0','β₁ = … = 0 AND φ = 0','φ = 1'], correct: 1, explain: 'No lag effects + no persistence ⇒ effects equal.' }
+], 'ch18');
+</script>
+</body></html>

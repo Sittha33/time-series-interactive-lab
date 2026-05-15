@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 17: Spurious Regression — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VI · Chapter 17</div>
+<h1>Spurious Regression</h1>
+<p class="intuition">Two independent random walks can produce R² &gt; 0.9 and "significant" t-stats — but the relationship is entirely accidental. Granger–Newbold (1974) made this famous.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Reproduce a spurious regression from two random walks.</div>
+<div class="objective">Spot the symptoms: high R², low DW, persistent residuals.</div>
+<div class="objective">Apply the Granger-Newbold rule R² &gt; DW.</div>
+<div class="objective">Fix by differencing or testing cointegration.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Fake Regression Generator</h3>
+<label>Sample n <span class="slider-row"><span></span><span class="val" id="vN">200</span><span></span></span></label>
+<input type="range" id="n" min="50" max="500" step="10" value="200">
+<label>Drift in y?</label>
+<select id="drift"><option value="0">No drift</option><option value="0.05">Small drift</option><option value="0.15">Strong drift</option></select>
+<label>Use first differences?</label>
+<select id="diff"><option value="no">No (levels — should be spurious)</option><option value="yes">Yes (differences — should be clean)</option></select>
+<div class="seed-row">Seed: <input type="number" id="seed" value="17"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel"><div id="rw" class="plot"></div><div id="scat" class="plot"></div><div id="resid" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Regression output</h3>
+<div class="live-readout"><strong>Estimated β:</strong> <span class="num" id="rB">—</span></div>
+<div class="live-readout"><strong>R²:</strong> <span class="num" id="rR2">—</span></div>
+<div class="live-readout"><strong>t-stat (β):</strong> <span class="num" id="rT">—</span></div>
+<div class="live-readout"><strong>Durbin-Watson:</strong> <span class="num" id="rDW">—</span></div>
+<div id="verdict"></div></div></section>
+
+<section class="formula-box"><h3>📐 Symptoms of spurious regression</h3>
+<div class="formula-line">\[ R^2 > DW \;\Rightarrow\; \text{Granger-Newbold spurious-regression flag} \]</div>
+<div class="symbol-list">
+<div><strong>High R²</strong> <span>could just be shared drift</span></div>
+<div><strong>Low DW (≪ 2)</strong> <span>residuals highly autocorrelated</span></div>
+<div><strong>Non-stat residuals</strong> <span>ADF fails to reject</span></div>
+<div><strong>Phillips (1986)</strong> <span>t-stat diverges as n grows</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Levels regression often shows R² &gt; 0.9 by accident — DW near 0.</li>
+<li>Switch to differences: R² collapses to near zero (correct result for unrelated series).</li>
+<li>Real relationship would survive the differencing — see Ch 20 (cointegration).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"R² = 0.94 and t = 18 — the relationship is real."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>With I(1) variables, standard inference breaks down. High R² can be entirely from coincidental trending; DW near 0 betrays the trap.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Check DW, residual stationarity (ADF), apply Granger-Newbold rule. If spurious, difference both series or test for cointegration.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Symptom</th><th>Spurious indicator</th></tr></thead><tbody>
+<tr><td>R²</td><td>&gt; 0.7 with I(1) regressors</td></tr>
+<tr><td>DW</td><td>&lt; 1 (strong positive AC)</td></tr>
+<tr><td>R² &gt; DW</td><td>Granger-Newbold flag</td></tr>
+<tr><td>Residual ADF</td><td>Fails to reject = non-stationary</td></tr>
+<tr><td>Fix</td><td>Difference or test cointegration</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(17); TSL.buildFooter(17);
+function refresh(){
+  const n=parseInt(TSL.$('#n').value), drift=parseFloat(TSL.$('#drift').value);
+  const useDiff=TSL.$('#diff').value==='yes', seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vN').textContent=n;
+  const rn=TSL.seededRandn(seed);
+  const x = TSL.generateRandomWalk(n, drift, 1, seed);
+  const y = TSL.generateRandomWalk(n, drift, 1, seed+99);
+  let X=x, Y=y;
+  if (useDiff){ X=TSL.difference(x); Y=TSL.difference(y); }
+  TSL.plotMultiLine('rw', [{ y: x, name: 'x', color: '#2563eb' }, { y: y, name: 'y', color: '#b45309' }], 'Two random walks (drift '+drift+')', 'value');
+  TSL.plotScatter('scat', X, Y, 'Scatter '+(useDiff?'(differences)':'(levels)'), 'x', 'y');
+  const r = TSL.simpleOLS(X, Y);
+  TSL.plotResidual('resid', r.residuals, 'OLS residuals');
+  const dw = TSL.durbinWatson(r.residuals);
+  TSL.$('#rB').textContent=r.beta.toFixed(3);
+  TSL.$('#rR2').textContent=r.rSquared.toFixed(3);
+  TSL.$('#rT').textContent=r.tStat.toFixed(2);
+  TSL.$('#rDW').textContent=dw.toFixed(3);
+  let verdict='';
+  if (!useDiff){
+    if (r.rSquared > dw) verdict='<div class="callout danger">⚠ Granger-Newbold flag: R² &gt; DW → SPURIOUS regression suspected.</div>';
+    else verdict='<div class="callout info">No clear spurious signal this draw — try regenerating; spurious cases are common but stochastic.</div>';
+  } else {
+    verdict='<div class="callout success">✓ Differences look clean. R² should be near zero for unrelated processes.</div>';
+  }
+  TSL.$('#verdict').innerHTML=verdict;
+}
+['n','drift','diff','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Granger-Newbold rule flags spurious when:', options: ['R² < DW','R² > DW','t-stat < 1.96','RMSE high'], correct: 1, explain: 'A classic shortcut for I(1) regressions.' },
+  { q: 'Best fix for spurious regression is:', options: ['Add more lags','Difference both series or test cointegration','Increase sample','Use log-log'], correct: 1, explain: 'Differencing or cointegration analysis.' },
+  { q: 'A DW near 0 in an I(1) regression suggests:', options: ['Heteroskedasticity','Heavily autocorrelated residuals — spurious','No autocorrelation','Cointegration confirmed'], correct: 1, explain: 'DW≈0 = strong residual autocorrelation.' },
+  { q: 'True/False: A high t-statistic in levels with I(1) variables proves a real relationship.', options: ['True','False'], correct: 1, explain: 'Phillips (1986): standard t-distribution invalid under I(1).' }
+], 'ch17');
+</script>
+</body></html>

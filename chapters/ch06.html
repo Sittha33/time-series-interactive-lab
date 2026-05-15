@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 6: Trading Indicators — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part II · Chapter 6</div>
+<h1>Trading Indicators as Filters</h1>
+<p class="intuition">MA crossover signals are simple linear filters of price history. They generate buy/sell triggers but always LAG actual price moves.</p>
+<div class="callout warning">Educational illustration only — NOT investment advice.</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute short/long moving averages and crossover signals.</div>
+<div class="objective">Interpret MAs as linear filters of price history.</div>
+<div class="objective">Recognize that signals lag the actual price move.</div>
+<div class="objective">Understand backtest pitfalls (data snooping, costs).</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>MA Crossover Lab</h3>
+<label>Short MA window <span class="slider-row"><span></span><span class="val" id="vSh">10</span><span></span></span></label>
+<input type="range" id="sh" min="3" max="50" step="1" value="10">
+<label>Long MA window <span class="slider-row"><span></span><span class="val" id="vLg">30</span><span></span></span></label>
+<input type="range" id="lg" min="10" max="200" step="5" value="30">
+<label>Trend (drift %) <span class="slider-row"><span></span><span class="val" id="vMu">0.05</span><span></span></span></label>
+<input type="range" id="mu" min="-0.2" max="0.2" step="0.01" value="0.05">
+<label>Volatility σ % <span class="slider-row"><span></span><span class="val" id="vSig">1.5</span><span></span></span></label>
+<input type="range" id="sig" min="0.2" max="5" step="0.05" value="1.5">
+<div class="seed-row">Seed: <input type="number" id="seed" value="9"> <button id="regen">🔄 Regenerate</button></div>
+</div>
+<div class="chart-panel"><div id="chart" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Backtest readout</h3>
+<div class="live-readout"><strong>Number of trades:</strong> <span class="num" id="nTrades">—</span></div>
+<div class="live-readout"><strong>Buy-and-hold return:</strong> <span class="num" id="bh">—</span> %</div>
+<div class="live-readout"><strong>Strategy return (no costs):</strong> <span class="num" id="strat">—</span> %</div>
+<p class="muted">Real backtests must include transaction costs, slippage, and proper train/test splits.</p></div></section>
+
+<section class="formula-box"><h3>📐 Rules</h3>
+<div class="formula-line">\[ \text{Signal}_t = \begin{cases} +1 \;\; \text{(long)} & \text{if } \text{MA}^{\text{short}}_t > \text{MA}^{\text{long}}_t \\ 0 \;\; \text{(flat)} & \text{otherwise} \end{cases} \]</div>
+<div class="symbol-list">
+<div><strong>Cross-up</strong> <span>short MA crosses above long → buy</span></div>
+<div><strong>Cross-down</strong> <span>short MA crosses below long → sell</span></div>
+<div><strong>Lag</strong> <span>signal arrives AFTER move</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3>
+<ul><li>Signals fire after the trend is already in motion — there's no anticipation.</li>
+<li>In choppy / sideways markets, whipsaws create many small losses.</li>
+<li>Trending markets reward this strategy; mean-reverting markets punish it.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"My MA crossover Sharpe is 1.8 — proven alpha."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Train/test contamination, ignored costs, regime-specific results. Many MAs were tried — multiple-testing inflates the best Sharpe.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Report walk-forward OOS Sharpe net of realistic costs vs buy-and-hold benchmark. Most simple MA crossovers do not survive.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Concept</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>MA crossover</td><td>Short MA vs Long MA — momentum signal</td></tr>
+<tr><td>Lag</td><td>Signal fires AFTER price move</td></tr>
+<tr><td>Whipsaw</td><td>Many quick reversals → losses</td></tr>
+<tr><td>Backtest danger</td><td>Data snooping inflates Sharpe</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(6); TSL.buildFooter(6);
+function refresh(){
+  const sh=parseInt(TSL.$('#sh').value), lg=parseInt(TSL.$('#lg').value);
+  const mu=parseFloat(TSL.$('#mu').value)/100, sig=parseFloat(TSL.$('#sig').value)/100;
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vSh').textContent=sh; TSL.$('#vLg').textContent=lg;
+  TSL.$('#vMu').textContent=(mu*100).toFixed(2); TSL.$('#vSig').textContent=(sig*100).toFixed(2);
+  const n=300; const rn=TSL.seededRandn(seed);
+  const price=[100]; for (let i=1;i<n;i++) price.push(price[i-1]*Math.exp(mu - 0.5*sig*sig + sig*rn()));
+  const smaShort=TSL.rollingMean(price, sh), smaLong=TSL.rollingMean(price, lg);
+  const sig_arr=[], buys={x:[],y:[]}, sells={x:[],y:[]};
+  let pos=0, nT=0, strat=1, last=price[0];
+  for (let i=1;i<n;i++){
+    if (smaShort[i]!=null && smaLong[i]!=null){
+      const prev = smaShort[i-1]>smaLong[i-1] ? 1 : 0;
+      const curr = smaShort[i]>smaLong[i] ? 1 : 0;
+      if (curr===1 && prev===0){ buys.x.push(i+1); buys.y.push(price[i]); pos=1; nT++; }
+      else if (curr===0 && prev===1){ sells.x.push(i+1); sells.y.push(price[i]); pos=0; nT++; }
+    }
+    if (pos===1) strat *= price[i]/price[i-1];
+  }
+  const bh = (price[n-1]/price[0]-1)*100;
+  const stratRet = (strat-1)*100;
+  TSL.$('#nTrades').textContent=nT; TSL.$('#bh').textContent=bh.toFixed(2); TSL.$('#strat').textContent=stratRet.toFixed(2);
+  const traces=[
+    { y: price, name: 'price', color: '#94a3b8' },
+    { y: smaShort, name: 'SMA('+sh+')', color: '#2563eb' },
+    { y: smaLong, name: 'SMA('+lg+')', color: '#b45309' },
+    { x: buys.x, y: buys.y, name: 'buy', mode: 'markers', marker: { color: '#15803d', size: 9, symbol: 'triangle-up' } },
+    { x: sells.x, y: sells.y, name: 'sell', mode: 'markers', marker: { color: '#b91c1c', size: 9, symbol: 'triangle-down' } }
+  ];
+  TSL.plotMultiLine('chart', traces, 'MA crossover signals on synthetic price', 'price');
+}
+['sh','lg','mu','sig','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+if (document.readyState === 'complete') requestAnimationFrame(() => setTimeout(refresh, 0));
+else window.addEventListener('load', () => requestAnimationFrame(() => setTimeout(refresh, 0)));
+TSL.Quiz.render('#quiz', [
+  { q: 'MA crossover signals are inherently:', options: ['Forward-looking','Lagging','Random'], correct: 1, explain: 'They average past prices, so signals fire after the move.' },
+  { q: 'A great backtest Sharpe AFTER parameter optimization is most likely:', options: ['Real alpha','Inflated by data snooping','Equal to OOS','Causally identified'], correct: 1, explain: 'Tuning + multiple testing inflates measured performance.' },
+  { q: 'True/False: in choppy sideways markets, MA crossovers tend to produce whipsaws.', options: ['True','False'], correct: 0, explain: 'Yes — many false signals cost money.' }
+], 'ch06');
+</script>
+</body></html>

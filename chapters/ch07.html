@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 7: Randomness and Dependence — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part III · Chapter 7</div>
+<h1>Randomness and Dependence</h1>
+<p class="intuition">White noise has no useful past information. An autocorrelated series LOOKS random but contains predictable dependence — visible only on a lag-scatter or ACF plot.</p>
+<div class="key-formula">\( y_t = \phi\, y_{t-1} + \varepsilon_t \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Distinguish white noise from autocorrelated series.</div>
+<div class="objective">Read a lag-1 scatter plot to detect dependence.</div>
+<div class="objective">Interpret the sample ACF.</div>
+<div class="objective">Recognize that visual randomness ≠ statistical independence.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Dependence Lab</h3>
+<label>Model</label>
+<select id="mod"><option value="wn">White noise</option><option value="ar">AR(1)</option></select>
+<label>φ (AR coefficient) <span class="slider-row"><span>-0.95</span><span class="val" id="vP">0.7</span><span>0.99</span></span></label>
+<input type="range" id="phi" min="-0.95" max="0.99" step="0.01" value="0.7">
+<label>Sample size n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="50" max="600" step="10" value="300">
+<div class="seed-row">Seed: <input type="number" id="seed" value="5"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel">
+<div id="ts" class="plot"></div><div id="scat" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Interpretation</h3>
+<div class="live-readout"><strong>Sample ρ(1):</strong> <span class="num" id="r1">—</span></div>
+<div class="live-readout"><strong>Expected ρ(1):</strong> <span class="num" id="r1e">—</span></div>
+<p class="muted">If model = white noise, both should be near zero. If AR(1) with φ=0.7, expect ≈ 0.7.</p></div></section>
+
+<section class="formula-box"><h3>📐 ACF definition</h3>
+<div class="formula-line">\[ \rho(h) = \frac{\mathrm{Cov}(y_t, y_{t-h})}{\mathrm{Var}(y_t)} \]</div>
+<div class="symbol-list">
+<div><strong>ρ(0)</strong> <span>= 1 (trivially)</span></div>
+<div><strong>ρ(h) ≈ 0 ∀ h</strong> <span>⇒ white noise</span></div>
+<div><strong>Geometric decay</strong> <span>⇒ AR(1)</span></div>
+<div><strong>±1.96/√n</strong> <span>significance band</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>White noise: scatter is a random cloud; ACF bars within bands.</li>
+<li>AR(1) with positive φ: scatter forms an upward-sloping cloud; ACF decays geometrically.</li>
+<li>Negative φ: scatter slopes down; ACF alternates in sign.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"The series looks erratic so it must be independent noise."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>An AR(1) with φ = 0.8 still looks "jagged" but has strong dependence visible only in lag scatter / ACF.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Always check the ACF before declaring a series random. Independence is a statistical property, not a visual one.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Series</th><th>ACF pattern</th><th>Scatter (y_t vs y_{t-1})</th></tr></thead><tbody>
+<tr><td>White noise</td><td>all ≈ 0</td><td>random cloud</td></tr>
+<tr><td>AR(1) φ > 0</td><td>geometric decay</td><td>upward cloud</td></tr>
+<tr><td>AR(1) φ < 0</td><td>alternating decay</td><td>downward cloud</td></tr>
+<tr><td>Random walk</td><td>very slow decay</td><td>near-perfect diagonal</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(7); TSL.buildFooter(7);
+function refresh(){
+  const mod=TSL.$('#mod').value, phi=parseFloat(TSL.$('#phi').value);
+  const n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP').textContent=phi.toFixed(2); TSL.$('#vN').textContent=n;
+  const y = mod==='wn' ? TSL.generateWhiteNoise(n,1,seed) : TSL.generateAR1(n,phi,1,0,seed);
+  TSL.plotLine('ts', null, y, mod==='wn'?'White noise':'AR(1), φ='+phi.toFixed(2), 'y_t', '#2563eb');
+  const x1=y.slice(0,-1), y1=y.slice(1);
+  TSL.plotScatter('scat', x1, y1, 'Lag scatter: y_t vs y_{t-1}', 'y_{t-1}', 'y_t');
+  const a=TSL.acf(y, 20); TSL.plotACF('acf', a, 'Sample ACF (lags 1–20)', n);
+  TSL.$('#r1').textContent=a[0].toFixed(3);
+  TSL.$('#r1e').textContent=(mod==='wn'?'≈ 0':phi.toFixed(2));
+}
+['mod','phi','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'White noise has ACF that:', options: ['Decays geometrically','Is approximately zero at all positive lags','Equals 1 at all lags'], correct: 1, explain: 'No serial dependence ⇒ zero autocorrelations.' },
+  { q: 'AR(1) with φ = -0.6 produces:', options: ['Geometric decay all positive','Alternating-sign ACF that decays','Constant ACF'], correct: 1, explain: 'Negative φ ⇒ sign alternation.' },
+  { q: 'Lag-scatter for white noise looks like:', options: ['Diagonal line','Random cloud','Negative slope'], correct: 1, explain: 'No relationship between t and t-1.' }
+], 'ch07');
+</script>
+</body></html>

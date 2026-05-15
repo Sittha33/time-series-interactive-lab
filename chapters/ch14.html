@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 14: ARIMA Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part IV · Chapter 14</div>
+<h1>ARIMA Models</h1>
+<p class="intuition">ARIMA(p,d,q): take d differences to make the series stationary, then fit ARMA(p,q) to the result. The "I" stands for INTEGRATED — meaning differenced.</p>
+<div class="key-formula">\( \phi(L)(1-L)^d y_t = \theta(L) \varepsilon_t \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Choose (p,d,q) via Box-Jenkins.</div>
+<div class="objective">Apply differencing prior to ARMA fitting.</div>
+<div class="objective">Recognize ARIMA(0,1,0) = random walk.</div>
+<div class="objective">Use residual diagnostics for adequacy.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>ARIMA Builder</h3>
+<label>p (AR order)</label>
+<select id="p"><option>0</option><option selected>1</option><option>2</option></select>
+<label>d (differencing)</label>
+<select id="d"><option>0</option><option selected>1</option><option>2</option></select>
+<label>q (MA order)</label>
+<select id="q"><option>0</option><option selected>1</option><option>2</option></select>
+<label>φ <span class="slider-row"><span></span><span class="val" id="vP">0.6</span><span></span></span></label>
+<input type="range" id="phi" min="-0.9" max="0.9" step="0.01" value="0.6">
+<label>θ <span class="slider-row"><span></span><span class="val" id="vT">0.4</span><span></span></span></label>
+<input type="range" id="th" min="-0.9" max="0.9" step="0.01" value="0.4">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="100" max="600" step="20" value="300">
+<div class="seed-row">Seed: <input type="number" id="seed" value="14"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="orig" class="plot"></div><div id="diff" class="plot"></div><div id="fc" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Box-Jenkins workflow</h3>
+<div class="live-readout"><strong>Identify:</strong> plot + ADF + ACF/PACF</div>
+<div class="live-readout"><strong>Estimate:</strong> fit ARIMA(p,d,q)</div>
+<div class="live-readout"><strong>Diagnose:</strong> Ljung-Box on residuals</div>
+<div class="live-readout"><strong>Forecast:</strong> static vs dynamic</div></div></section>
+
+<section class="formula-box"><h3>📐 ARIMA(p,d,q)</h3>
+<div class="formula-line">\[ (1-\phi_1 L - \cdots - \phi_p L^p)(1-L)^d y_t = (1+\theta_1 L + \cdots + \theta_q L^q) \varepsilon_t \]</div>
+<div class="symbol-list">
+<div><strong>d</strong> <span>number of differences</span></div>
+<div><strong>(0,1,0)</strong> <span>random walk</span></div>
+<div><strong>(0,1,1)</strong> <span>Δy_t follows MA(1)</span></div>
+<div><strong>(1,1,0)</strong> <span>Δy_t follows AR(1)</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Original series may trend; differenced series should look stationary.</li>
+<li>Forecast in LEVELS continues the trend (random walk-like for d=1).</li>
+<li>Always validate (p,q) on the differenced (stationary) series.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"The I in ARIMA means 'interactive'."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>The I means INTEGRATED — specifically, the series has been differenced d times to achieve stationarity.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>ARIMA(p,d,q) = ARMA(p,q) on the d-th difference of y. Always determine d FIRST (ADF + KPSS), then identify p,q.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Spec</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>ARIMA(0,1,0)</td><td>Random walk</td></tr>
+<tr><td>ARIMA(0,1,1)</td><td>Differenced MA(1) — common for ETS-like dynamics</td></tr>
+<tr><td>ARIMA(1,1,0)</td><td>Differenced AR(1)</td></tr>
+<tr><td>ARIMA(p,0,q)</td><td>= ARMA(p,q), already stationary</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(14); TSL.buildFooter(14);
+function refresh(){
+  const p=parseInt(TSL.$('#p').value), d=parseInt(TSL.$('#d').value), q=parseInt(TSL.$('#q').value);
+  const phi=parseFloat(TSL.$('#phi').value), th=parseFloat(TSL.$('#th').value);
+  const n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP').textContent=phi.toFixed(2); TSL.$('#vT').textContent=th.toFixed(2); TSL.$('#vN').textContent=n;
+  // simulate stationary ARMA on inner, then integrate d times
+  let inner;
+  if (p===0 && q===0) inner = TSL.generateWhiteNoise(n,1,seed);
+  else if (p===1 && q===0) inner = TSL.generateAR1(n, phi, 1, 0, seed);
+  else if (p===0 && q===1) inner = TSL.generateMA1(n, th, 1, seed);
+  else if (p===2 && q===0) inner = TSL.generateAR2(n, phi, -0.2, 1, seed);
+  else if (p===0 && q===2) inner = TSL.generateMA2(n, th, -0.2, 1, seed);
+  else inner = TSL.generateARMA11(n, phi, th, 1, seed);
+  let y = inner.slice();
+  for (let k=0;k<d;k++){ const tmp=[y[0]||0]; for (let i=1;i<y.length;i++) tmp.push(tmp[i-1]+y[i]); y = tmp; }
+  TSL.plotLine('orig', null, y, 'ARIMA('+p+','+d+','+q+') simulation', 'y_t', '#2563eb');
+  const dy = d>0 ? TSL.difference(y, d) : y;
+  TSL.plotLine('diff', null, dy, 'After differencing d='+d, 'Δ^'+d+' y_t', '#b45309');
+  // simple forecast: extrapolate last value with RW + drift d=1
+  const h = 30; const fc = new Array(h);
+  for (let i=0;i<h;i++) fc[i] = y[y.length-1];
+  TSL.plotForecast('fc', y, fc, 'Forecast (illustrative)');
+}
+['p','d','q','phi','th','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'ARIMA(0,1,0) is:', options: ['White noise','Random walk','AR(1)','MA(1)'], correct: 1, explain: 'd=1 with no AR/MA = RW.' },
+  { q: 'Determine d FIRST because:', options: ['It is alphabetical','Differencing affects ACF/PACF used for p,q','It does not matter','Default is d=2'], correct: 1, explain: 'Identify p,q on stationary (differenced) series.' },
+  { q: 'After fitting, residual Ljung-Box p = 0.001 means:', options: ['Model passes','Model fails — residuals autocorrelated','Increase p+q'], correct: 1, explain: 'Small p ⇒ reject white noise ⇒ inadequate.' }
+], 'ch14');
+</script>
+</body></html>

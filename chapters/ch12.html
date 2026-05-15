@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 12: MA(q) Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part IV · Chapter 12</div>
+<h1>Moving Average (MA) Models</h1>
+<p class="intuition">MA models depend on past SHOCKS, not past observations. Memory is finite: an MA(q) shock only lasts q periods.</p>
+<div class="key-formula">\( y_t = \varepsilon_t + \theta\, \varepsilon_{t-1} \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Distinguish "MA model" from "moving-average smoother".</div>
+<div class="objective">Trace a shock through an MA(1) process.</div>
+<div class="objective">Recognize MA(q) by ACF cutoff at lag q.</div>
+<div class="objective">Understand invertibility: |θ| &lt; 1.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>MA Shock Propagation</h3>
+<label>θ <span class="slider-row"><span>-0.95</span><span class="val" id="vT">0.7</span><span>0.95</span></span></label>
+<input type="range" id="th" min="-0.95" max="0.95" step="0.01" value="0.7">
+<label>Shock time t* <span class="slider-row"><span></span><span class="val" id="vTm">20</span><span></span></span></label>
+<input type="range" id="tm" min="2" max="48" step="1" value="20">
+<label>Shock size <span class="slider-row"><span></span><span class="val" id="vSh">5</span><span></span></span></label>
+<input type="range" id="sh" min="-10" max="10" step="0.5" value="5">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">60</span><span></span></span></label>
+<input type="range" id="n" min="30" max="120" step="2" value="60">
+<button id="regen">🔄 Reset</button></div>
+<div class="chart-panel"><div id="ts" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Live</h3>
+<div class="live-readout"><strong>Invertibility:</strong> <span class="num" id="inv">—</span></div>
+<div class="live-readout"><strong>ρ(1) of MA(1):</strong> <span class="num" id="r1">—</span></div>
+<p class="muted">Shock at t* shows up only at t* and t*+1, then DISAPPEARS — finite memory.</p></div></section>
+
+<section class="formula-box"><h3>📐 MA(1) properties</h3>
+<div class="formula-line">\[ y_t = \varepsilon_t + \theta\varepsilon_{t-1},\quad \text{Var}(y_t)=(1+\theta^2)\sigma^2 \]</div>
+<div class="formula-line">\[ \rho(1)=\frac{\theta}{1+\theta^2},\quad \rho(h)=0 \text{ for } h>1 \]</div>
+<div class="symbol-list">
+<div><strong>θ</strong> <span>MA coefficient (signs propagate)</span></div>
+<div><strong>Invertibility</strong> <span>|θ| &lt; 1</span></div>
+<div><strong>ACF</strong> <span>cuts off after lag q</span></div>
+<div><strong>Memory</strong> <span>finite = q periods</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Shock at t* creates a spike at t* and an echo at t*+1 (scaled by θ).</li>
+<li>For h &gt; 1, the series returns to its baseline — finite memory.</li>
+<li>ACF should be near zero beyond lag 1 (MA(1) signature).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"MA model means I'm modeling a moving-average smoother."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>The MA in MA(q) refers to past SHOCKS in a stochastic model, not the descriptive smoothing operation from Ch 5. Different concept entirely.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>MA(q) is a stochastic process: y_t = ε_t + θ_1 ε_{t-1} + … + θ_q ε_{t-q}.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Quantity</th><th>MA(1)</th></tr></thead><tbody>
+<tr><td>Mean</td><td>0</td></tr>
+<tr><td>Variance</td><td>(1 + θ²)σ²</td></tr>
+<tr><td>ρ(1)</td><td>θ / (1 + θ²)</td></tr>
+<tr><td>ρ(h) for h &gt; 1</td><td>0</td></tr>
+<tr><td>Invertibility</td><td>|θ| &lt; 1</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(12); TSL.buildFooter(12);
+function refresh(){
+  const th=parseFloat(TSL.$('#th').value), tm=parseInt(TSL.$('#tm').value);
+  const sh=parseFloat(TSL.$('#sh').value), n=parseInt(TSL.$('#n').value);
+  TSL.$('#vT').textContent=th.toFixed(2); TSL.$('#vTm').textContent=tm;
+  TSL.$('#vSh').textContent=sh.toFixed(1); TSL.$('#vN').textContent=n;
+  TSL.$('#inv').textContent = Math.abs(th)<1 ? 'YES (invertible)' : 'NO (non-invertible)';
+  TSL.$('#r1').textContent = (th/(1+th*th)).toFixed(3);
+  const eps = new Array(n).fill(0); eps[tm] = sh;
+  const y = new Array(n); for (let i=0;i<n;i++) y[i] = eps[i] + (i>0 ? th*eps[i-1] : 0);
+  TSL.plotMultiLine('ts', [
+    { y: eps, name: 'shock ε_t', color: '#94a3b8', mode: 'lines+markers' },
+    { y: y, name: 'MA(1) response y_t', color: '#2563eb' }
+  ], 'Single shock + MA(1) propagation', 'value');
+  // Make ACF on a longer simulated series
+  const long = TSL.generateMA1(400, th, 1, 99);
+  const a = TSL.acf(long, 15);
+  TSL.plotACF('acf', a, 'ACF of MA(1) on long sample', 400);
+}
+['th','tm','sh','n'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', refresh);
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'MA(1) memory length is:', options: ['Infinite','1 period','Always 5','Depends on θ²'], correct: 1, explain: 'Shocks affect y for exactly 1 lag (MA(1)).' },
+  { q: 'ACF of MA(2):', options: ['Cuts off after lag 2','Tails off geometrically','Always near zero','Constant'], correct: 0, explain: 'MA(q) ACF cuts off after lag q.' },
+  { q: 'Invertibility of MA(1) requires:', options: ['|φ|<1','|θ|<1','θ=0','θ>1'], correct: 1, explain: 'Allows AR(∞) representation.' },
+  { q: 'True/False: MA model = moving-average smoother from Ch 5.', options: ['True','False'], correct: 1, explain: 'They are different concepts (model vs smoother).' }
+], 'ch12');
+</script>
+</body></html>

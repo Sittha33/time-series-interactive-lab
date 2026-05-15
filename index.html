@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Applied Time Series Interactive Lab</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="page-shell">
+    <section class="dashboard-hero">
+      <h1>Applied Time Series Interactive Lab</h1>
+      <p>Interactive simulators, diagnostic plots, and exam visuals for time-series econometrics. Tweak parameters with sliders, see the impact on charts and formulas immediately, and test yourself with chapter quizzes.</p>
+      <div class="stats">
+        <div class="stat"><strong>26</strong>chapters</div>
+        <div class="stat"><strong>8</strong>parts (Parts I–VIII)</div>
+        <div class="stat"><strong>26+</strong>interactive labs</div>
+        <div class="stat"><strong>100+</strong>quiz questions</div>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part I — Foundations</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch01.html"><span class="ch-num">CHAPTER 1</span><h3>Why Time Series Matter</h3><p>Order matters: trend + cycle + noise components shape every series.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch02.html"><span class="ch-num">CHAPTER 2</span><h3>Returns and Financial Data</h3><p>Prices drift; returns are usually stationary and more model-friendly.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch03.html"><span class="ch-num">CHAPTER 3</span><h3>Probability and Statistics</h3><p>Same mean can hide very different risk — distributions and tails matter.</p><span class="chapter-badge diag">Diagnostic</span></a>
+        <a class="chapter-card" href="chapters/ch04.html"><span class="ch-num">CHAPTER 4</span><h3>Visualizing Time Series</h3><p>Always plot before modeling — spot trend, seasonality, breaks, outliers.</p><span class="chapter-badge exam">Exam Lab</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part II — Smoothing & Filters</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch05.html"><span class="ch-num">CHAPTER 5</span><h3>Smoothing and Trend Estimation</h3><p>Moving averages reveal trend but introduce lag.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch06.html"><span class="ch-num">CHAPTER 6</span><h3>Trading Indicators as Filters</h3><p>MA crossover signals — educational illustration of lagged filters.</p><span class="chapter-badge">Simulator</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part III — Dependence, Stationarity, Unit Roots</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch07.html"><span class="ch-num">CHAPTER 7</span><h3>Randomness and Dependence</h3><p>A random-looking series can still be strongly autocorrelated.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch08.html"><span class="ch-num">CHAPTER 8</span><h3>Stationarity</h3><p>Stable mean and variance over time — the foundation of everything.</p><span class="chapter-badge diag">Diagnostic</span></a>
+        <a class="chapter-card" href="chapters/ch09.html"><span class="ch-num">CHAPTER 9</span><h3>ACF and PACF</h3><p>Pattern recognition: AR cuts PACF, MA cuts ACF.</p><span class="chapter-badge exam">Exam Lab</span></a>
+        <a class="chapter-card" href="chapters/ch10.html"><span class="ch-num">CHAPTER 10</span><h3>Unit Roots and Differencing</h3><p>Differencing turns a unit root into a stationary process.</p><span class="chapter-badge diag">Diagnostic</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part IV — ARIMA Modeling</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch11.html"><span class="ch-num">CHAPTER 11</span><h3>AR(p) Models</h3><p>Persistence via past values — φ controls memory and oscillation.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch12.html"><span class="ch-num">CHAPTER 12</span><h3>MA(q) Models</h3><p>Shock propagation — finite memory of past errors.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch13.html"><span class="ch-num">CHAPTER 13</span><h3>ARMA Models</h3><p>Persistence + shock effects combined.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch14.html"><span class="ch-num">CHAPTER 14</span><h3>ARIMA Models</h3><p>Difference first, then model — Box-Jenkins workflow.</p><span class="chapter-badge">Simulator</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part V — Forecasting</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch15.html"><span class="ch-num">CHAPTER 15</span><h3>Forecasting Methods</h3><p>Forecasts decay to mean (stationary) or stay put (RW).</p><span class="chapter-badge forecast">Forecast Lab</span></a>
+        <a class="chapter-card" href="chapters/ch16.html"><span class="ch-num">CHAPTER 16</span><h3>Forecast Evaluation</h3><p>Bias, RMSE, MAE, MAPE, Theil U — pick by loss function.</p><span class="chapter-badge forecast">Forecast Lab</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part VI — Time-Series Regression</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch17.html"><span class="ch-num">CHAPTER 17</span><h3>Spurious Regression</h3><p>Two unrelated random walks can produce high R² and significant t.</p><span class="chapter-badge exam">Exam Lab</span></a>
+        <a class="chapter-card" href="chapters/ch18.html"><span class="ch-num">CHAPTER 18</span><h3>Dynamic Regression & ARDL</h3><p>Short-run vs long-run effects via lagged terms.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch19.html"><span class="ch-num">CHAPTER 19</span><h3>Granger Causality</h3><p>Predictive content, not philosophical causality.</p><span class="chapter-badge exam">Exam Lab</span></a>
+        <a class="chapter-card" href="chapters/ch20.html"><span class="ch-num">CHAPTER 20</span><h3>Cointegration</h3><p>I(1) variables with a stationary linear combination.</p><span class="chapter-badge diag">Diagnostic</span></a>
+        <a class="chapter-card" href="chapters/ch21.html"><span class="ch-num">CHAPTER 21</span><h3>Error Correction Models</h3><p>Speed of adjustment back to long-run equilibrium.</p><span class="chapter-badge">Simulator</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part VII — Multivariate Time Series</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch22.html"><span class="ch-num">CHAPTER 22</span><h3>VAR Models</h3><p>Variables jointly endogenous — use IRFs and FEVD to interpret.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch23.html"><span class="ch-num">CHAPTER 23</span><h3>Impulse Response Functions</h3><p>Trace the dynamic ripple of a one-time shock through time.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch24.html"><span class="ch-num">CHAPTER 24</span><h3>VECM</h3><p>VAR + cointegration → error-correction in a system.</p><span class="chapter-badge diag">Diagnostic</span></a>
+      </div>
+    </section>
+
+    <section class="part-section">
+      <h2>Part VIII — Volatility Models</h2>
+      <div class="cards-grid">
+        <a class="chapter-card" href="chapters/ch25.html"><span class="ch-num">CHAPTER 25</span><h3>ARCH Models</h3><p>Volatility today depends on yesterday's squared shock.</p><span class="chapter-badge">Simulator</span></a>
+        <a class="chapter-card" href="chapters/ch26.html"><span class="ch-num">CHAPTER 26</span><h3>GARCH Models</h3><p>Volatility has memory — α + β controls persistence.</p><span class="chapter-badge">Simulator</span></a>
+      </div>
+    </section>
+
+    <section class="card" style="margin-top: 36px;">
+      <h2>How to use this lab</h2>
+      <ol>
+        <li>Click any chapter card to open its interactive lab.</li>
+        <li>Tweak parameters using sliders, dropdowns, and toggles on the left.</li>
+        <li>Watch charts and live readouts update in real time.</li>
+        <li>Read the formula box, diagnostic notes, and exam trap card.</li>
+        <li>Take the mini-quiz at the bottom — your score is saved per chapter.</li>
+        <li>Use the cheat-sheet table for last-minute revision.</li>
+      </ol>
+      <p class="muted" style="margin-top: 14px;"><strong>Disclaimer.</strong> Educational only. Simulators are textbook-simple implementations. The trading-indicator demo (Ch 6) is illustrative and not investment advice.</p>
+    </section>
+
+    <footer class="page-footer">
+      <div class="muted">Applied Time Series Interactive Lab</div>
+      <div class="muted">Built for master's-level exam preparation</div>
+    </footer>
+  </main>
+</body>
+</html>

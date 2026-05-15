@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 16: Forecast Evaluation — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part V · Chapter 16</div>
+<h1>Forecast Evaluation</h1>
+<p class="intuition">Bias, RMSE, MAE, MAPE, and Theil's U₂ each emphasize different aspects of forecast error. Pick the metric that matches your loss function.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute bias, MAE, MSE, RMSE, MAPE, Theil U₂.</div>
+<div class="objective">Understand which metric penalizes which errors.</div>
+<div class="objective">Recognize zero-bias but high-error situations.</div>
+<div class="objective">Compare model vs naive benchmark with Theil U₂.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Forecast Error Dashboard</h3>
+<label>Forecast bias <span class="slider-row"><span></span><span class="val" id="vB">0.0</span><span></span></span></label>
+<input type="range" id="bias" min="-3" max="3" step="0.05" value="0">
+<label>Error variance σ_e <span class="slider-row"><span></span><span class="val" id="vS">1.0</span><span></span></span></label>
+<input type="range" id="se" min="0.1" max="5" step="0.05" value="1">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">200</span><span></span></span></label>
+<input type="range" id="n" min="50" max="500" step="10" value="200">
+<label>Apply "bias cancellation" trap</label>
+<select id="trap"><option value="off">Off</option><option value="on">On</option></select>
+<div class="seed-row">Seed: <input type="number" id="seed" value="16"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="fc" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Live metrics</h3>
+<div class="live-readout"><strong>Bias:</strong> <span class="num" id="rB">—</span></div>
+<div class="live-readout"><strong>MAE:</strong> <span class="num" id="rMAE">—</span></div>
+<div class="live-readout"><strong>RMSE:</strong> <span class="num" id="rRMSE">—</span></div>
+<div class="live-readout"><strong>MAPE:</strong> <span class="num" id="rMAPE">—</span> %</div>
+<div class="live-readout"><strong>Theil U₂:</strong> <span class="num" id="rU2">—</span></div></div></section>
+
+<section class="formula-box"><h3>📐 Metric formulas</h3>
+<div class="formula-line">\[ \text{Bias}=\bar e,\; \text{MAE}=\overline{|e_t|},\; \text{MSE}=\overline{e_t^2},\; \text{RMSE}=\sqrt{\text{MSE}} \]</div>
+<div class="formula-line">\[ \text{MAPE}=100\,\overline{|e_t/y_t|},\quad U_2=\sqrt{\frac{\sum(\hat y_t - y_t)^2}{\sum(y_{t-1}-y_t)^2}} \]</div>
+<div class="symbol-list">
+<div><strong>RMSE</strong> <span>penalizes large errors quadratically</span></div>
+<div><strong>MAE</strong> <span>linear penalty, robust</span></div>
+<div><strong>MAPE</strong> <span>scale-free; unstable near zero</span></div>
+<div><strong>U₂ &lt; 1</strong> <span>beats naive RW benchmark</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Switching on "bias cancellation" creates equal positive & negative errors → bias near 0 but RMSE/MAE large.</li>
+<li>If U₂ &gt; 1, your model is worse than "tomorrow = today".</li>
+<li>MAPE explodes when y_t is near zero — careful with returns/growth rates.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Bias is near zero, so the forecast is accurate."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Zero bias means errors cancel ON AVERAGE. The forecast can still be wildly off period-by-period (high RMSE/MAE). Bias is necessary but not sufficient.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Report bias + RMSE + Theil U₂ jointly. Low bias + low RMSE + U₂ &lt; 1 is the win condition.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Metric</th><th>Use when</th></tr></thead><tbody>
+<tr><td>RMSE</td><td>Large errors are costly</td></tr>
+<tr><td>MAE</td><td>All errors equally costly</td></tr>
+<tr><td>MAPE</td><td>Scale-free comparison (NO zeros)</td></tr>
+<tr><td>Theil U₂</td><td>Compare vs naive RW benchmark</td></tr>
+<tr><td>Bias</td><td>Detect systematic over/under-prediction</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(16); TSL.buildFooter(16);
+function refresh(){
+  const bias=parseFloat(TSL.$('#bias').value), se=parseFloat(TSL.$('#se').value);
+  const n=parseInt(TSL.$('#n').value), trap=TSL.$('#trap').value;
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vB').textContent=bias.toFixed(2); TSL.$('#vS').textContent=se.toFixed(2); TSL.$('#vN').textContent=n;
+  const rn=TSL.seededRandn(seed); const actual=new Array(n), forecast=new Array(n);
+  for (let i=0;i<n;i++){ actual[i] = 10 + 0.05*i + 2*Math.sin(i/5) + 0.5*rn(); }
+  if (trap==='on'){
+    // alternate sign errors to make bias zero but RMSE big
+    for (let i=0;i<n;i++) forecast[i] = actual[i] + (i%2===0 ? +3 : -3);
+  } else {
+    for (let i=0;i<n;i++) forecast[i] = actual[i] + bias + se*rn();
+  }
+  TSL.plotMultiLine('fc', [
+    { y: actual, name: 'actual', color: '#2563eb' },
+    { y: forecast, name: 'forecast', color: '#b91c1c', dash: 'dot' }
+  ], 'Actual vs forecast', 'value');
+  const m = TSL.calculateForecastMetrics(actual, forecast);
+  TSL.$('#rB').textContent=m.bias.toFixed(3);
+  TSL.$('#rMAE').textContent=m.MAE.toFixed(3);
+  TSL.$('#rRMSE').textContent=m.RMSE.toFixed(3);
+  TSL.$('#rMAPE').textContent=isFinite(m.MAPE)?m.MAPE.toFixed(2):'n/a';
+  TSL.$('#rU2').textContent=isFinite(m.TheilU2)?m.TheilU2.toFixed(3):'n/a';
+}
+['bias','se','n','trap','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Which metric is most sensitive to large outlier errors?', options: ['MAE','RMSE','Bias','MAPE'], correct: 1, explain: 'Square magnifies large errors.' },
+  { q: 'U₂ = 1.1 means:', options: ['Model wins','Model loses to RW benchmark','Model = RW','Bias near zero'], correct: 1, explain: 'U₂>1 ⇒ worse than naive.' },
+  { q: 'A forecast with bias ≈ 0 but RMSE huge is:', options: ['Accurate','Unbiased but very imprecise','Same as RW','Best in class'], correct: 1, explain: 'Errors cancel on average but each one is large.' },
+  { q: 'MAPE is dangerous when y_t is:', options: ['Large positive','Near zero','Constant','Stationary'], correct: 1, explain: 'Division by near-zero values explodes.' }
+], 'ch16');
+</script>
+</body></html>

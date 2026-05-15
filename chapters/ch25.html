@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 25: ARCH Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VIII · Chapter 25</div>
+<h1>ARCH Models</h1>
+<p class="intuition">ARCH models conditional variance using past squared shocks: today's risk depends on yesterday's surprise. Volatility clusters in calm and turbulent regimes — exactly what ARCH captures.</p>
+<div class="key-formula">\( h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2,\;\; \varepsilon_t = \sqrt{h_t} z_t \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Simulate an ARCH(1) and observe volatility clustering.</div>
+<div class="objective">Interpret α₀, α₁; stability requires α₁ &lt; 1.</div>
+<div class="objective">Identify ARCH effects by squared-return autocorrelation.</div>
+<div class="objective">Understand that ARCH forecasts variance, not direction.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>ARCH Clustering Simulator</h3>
+<label>α₀ (baseline variance) <span class="slider-row"><span></span><span class="val" id="vA0">0.20</span><span></span></span></label>
+<input type="range" id="a0" min="0.01" max="2" step="0.01" value="0.2">
+<label>α₁ (ARCH effect) <span class="slider-row"><span>0</span><span class="val" id="vA1">0.50</span><span>1.5</span></span></label>
+<input type="range" id="a1" min="0" max="1.5" step="0.01" value="0.5">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">500</span><span></span></span></label>
+<input type="range" id="n" min="100" max="1000" step="20" value="500">
+<div class="seed-row">Seed: <input type="number" id="seed" value="25"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="vol" class="plot"></div><div id="sq" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Status</h3>
+<div class="live-readout"><strong>Persistence α₁:</strong> <span class="num" id="rA1">—</span></div>
+<div class="live-readout"><strong>Long-run var:</strong> <span class="num" id="rLR">—</span> (if α₁ &lt; 1)</div>
+<div id="warn"></div>
+<p class="muted">Squared-return ACF should be POSITIVE — that's the ARCH signature.</p></div></section>
+
+<section class="formula-box"><h3>📐 ARCH(1)</h3>
+<div class="formula-line">\[ h_t = \alpha_0 + \alpha_1 \varepsilon_{t-1}^2,\quad \alpha_0 > 0,\;\;\alpha_1 \geq 0 \]</div>
+<div class="formula-line">\[ \text{Long-run variance: }\frac{\alpha_0}{1-\alpha_1}\quad(\alpha_1<1) \]</div>
+<div class="symbol-list">
+<div><strong>α₀</strong> <span>floor variance</span></div>
+<div><strong>α₁</strong> <span>shock sensitivity</span></div>
+<div><strong>Stability</strong> <span>α₁ &lt; 1</span></div>
+<div><strong>ARCH LM test</strong> <span>T·R² ~ χ²(q) on squared residuals</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Returns plot shows clusters of large absolute values — calm vs turbulent periods.</li>
+<li>Squared-return ACF has significant positive bars (unlike return ACF which is near zero).</li>
+<li>α₁ near 1 ⇒ explosive variance; α₁ ≥ 1 ⇒ unstable.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"GARCH/ARCH predicts whether the market will go up tomorrow."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>ARCH/GARCH forecast VARIANCE (risk magnitude), not the sign of returns. Returns themselves may be ≈ white noise in the conditional mean.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>"Conditional variance ĥ_{t+1} = α₀ + α₁ ε̂_t². Use for VaR, option pricing, position sizing — not direction."</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Quantity</th><th>Note</th></tr></thead><tbody>
+<tr><td>ARCH(1) variance</td><td>α₀ + α₁ ε²_{t-1}</td></tr>
+<tr><td>Stability</td><td>α₁ &lt; 1</td></tr>
+<tr><td>Long-run variance</td><td>α₀ / (1 − α₁)</td></tr>
+<tr><td>ARCH LM test</td><td>T·R² on squared residuals ~ χ²(q)</td></tr>
+<tr><td>Forecast</td><td>Variance, NOT direction</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(25); TSL.buildFooter(25);
+function refresh(){
+  const a0=parseFloat(TSL.$('#a0').value), a1=parseFloat(TSL.$('#a1').value);
+  const n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vA0').textContent=a0.toFixed(2); TSL.$('#vA1').textContent=a1.toFixed(2); TSL.$('#vN').textContent=n;
+  TSL.$('#rA1').textContent=a1.toFixed(2);
+  TSL.$('#rLR').textContent = a1<1 ? (a0/(1-a1)).toFixed(2) : '∞ (unstable)';
+  TSL.$('#warn').innerHTML = a1>=1 ? '<div class="callout danger">⚠ α₁ ≥ 1: variance is explosive / non-stationary.</div>' : (a1>0.85 ? '<div class="callout warning">⚠ Near-unit-root variance — very persistent.</div>' : '<div class="callout success">✓ Stable ARCH(1).</div>');
+  const sim = TSL.generateARCH(n, a0, a1, seed);
+  TSL.plotVolatility('vol', sim.returns, sim.variance.map(v=>Math.sqrt(v)), 'Returns + conditional volatility √h_t');
+  const sq = sim.returns.map(x=>x*x);
+  const sa = TSL.acf(sq, 20);
+  TSL.plotACF('sq', sa, 'ACF of squared returns (ARCH signature)', n);
+}
+['a0','a1','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'ARCH(1) stability requires:', options: ['α₀ < 1','α₁ < 1','α₀ + α₁ < 1','α₁ > 1'], correct: 1, explain: 'For ARCH(1), the condition is α₁ < 1.' },
+  { q: 'ARCH effects show up as:', options: ['Significant ACF of returns','Significant ACF of squared returns','Trending returns','Mean shifts'], correct: 1, explain: 'Squared-return autocorrelation is the signature.' },
+  { q: 'ARCH/GARCH forecasts:', options: ['Return direction','Variance / risk','Mean','Skewness'], correct: 1, explain: 'Conditional variance, not direction.' }
+], 'ch25');
+</script>
+</body></html>

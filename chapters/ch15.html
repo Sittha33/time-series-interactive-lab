@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 15: Forecasting Methods — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part V · Chapter 15</div>
+<h1>Forecasting Methods</h1>
+<p class="intuition">Stationary AR(1) forecasts decay geometrically to the mean. Random-walk forecasts stay at the last observed value. Drift adds a steady trend. The model dictates the forecast shape.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute h-step forecasts for AR(1), RW, RW + drift.</div>
+<div class="objective">Distinguish static vs dynamic forecasts.</div>
+<div class="objective">Read forecast intervals (uncertainty grows with horizon).</div>
+<div class="objective">Choose the right benchmark for evaluation.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Forecast Horizon</h3>
+<label>Model</label>
+<select id="mod"><option value="ar">Stationary AR(1)</option><option value="rw">Random walk</option><option value="drift">RW with drift</option></select>
+<label>φ (AR only) <span class="slider-row"><span></span><span class="val" id="vP">0.7</span><span></span></span></label>
+<input type="range" id="phi" min="-0.95" max="0.99" step="0.01" value="0.7">
+<label>Drift δ <span class="slider-row"><span></span><span class="val" id="vD">0.10</span><span></span></span></label>
+<input type="range" id="drift" min="-0.5" max="0.5" step="0.01" value="0.1">
+<label>σ <span class="slider-row"><span></span><span class="val" id="vS">1.0</span><span></span></span></label>
+<input type="range" id="sig" min="0.2" max="3" step="0.05" value="1">
+<label>Forecast horizon h <span class="slider-row"><span></span><span class="val" id="vH">40</span><span></span></span></label>
+<input type="range" id="h" min="1" max="80" step="1" value="40">
+<div class="seed-row">Seed: <input type="number" id="seed" value="15"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="fc" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Forecast behavior</h3>
+<div class="live-readout" id="msg">—</div>
+<p class="muted">The 95% interval = forecast ± 1.96 × σ_h. Width grows with h.</p></div></section>
+
+<section class="formula-box"><h3>📐 Forecast formulas</h3>
+<div class="formula-line">\[ \text{AR(1): } \hat y_{T+h|T} = \phi^h y_T \quad(\to 0 \text{ as } h\to\infty) \]</div>
+<div class="formula-line">\[ \text{RW: } \hat y_{T+h|T} = y_T \quad \text{RW + drift: } \hat y_{T+h|T} = y_T + h\delta \]</div>
+<div class="symbol-list">
+<div><strong>AR(1) variance</strong> <span>σ²(1−φ^{2h})/(1−φ²)</span></div>
+<div><strong>RW variance</strong> <span>hσ² (grows linearly)</span></div>
+<div><strong>Static</strong> <span>uses actual y_{T+h−1}</span></div>
+<div><strong>Dynamic</strong> <span>uses ŷ_{T+h−1}</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>AR(1) forecast curves toward the mean; intervals saturate.</li>
+<li>RW forecast is flat; intervals grow as √h forever.</li>
+<li>RW + drift produces a sloped forecast line.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Random walk forecast must be zero."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>The best forecast for a RW at any horizon is the LAST observed value, not zero. The series has no mean to revert to.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>ŷ_{T+h|T} = y_T for RW; ŷ = y_T + hδ if drift is present.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Model</th><th>h-step forecast</th><th>Forecast variance</th></tr></thead><tbody>
+<tr><td>AR(1)</td><td>φ^h y_T</td><td>σ²(1−φ^{2h})/(1−φ²)</td></tr>
+<tr><td>RW</td><td>y_T</td><td>hσ²</td></tr>
+<tr><td>RW + drift</td><td>y_T + hδ</td><td>hσ²</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(15); TSL.buildFooter(15);
+function refresh(){
+  const mod=TSL.$('#mod').value, phi=parseFloat(TSL.$('#phi').value);
+  const drift=parseFloat(TSL.$('#drift').value), sig=parseFloat(TSL.$('#sig').value);
+  const h=parseInt(TSL.$('#h').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP').textContent=phi.toFixed(2); TSL.$('#vD').textContent=drift.toFixed(2);
+  TSL.$('#vS').textContent=sig.toFixed(2); TSL.$('#vH').textContent=h;
+  const n=120;
+  let y, fc, ci, msg;
+  if (mod==='ar'){
+    y = TSL.generateAR1(n, phi, sig, 0, seed);
+    fc = TSL.forecastAR1(y[n-1], phi, h);
+    ci = TSL.forecastIntervalAR1(sig, phi, h);
+    msg = 'AR(1) forecast decays from y_T='+y[n-1].toFixed(2)+' to long-run mean 0. Half-life '+ (phi>0&&phi<1 ? (Math.log(0.5)/Math.log(phi)).toFixed(1) : 'n/a');
+  } else if (mod==='rw'){
+    y = TSL.generateRandomWalk(n, 0, sig, seed);
+    fc = TSL.forecastRW(y[n-1], h, 0);
+    ci = new Array(h); for (let i=0;i<h;i++) ci[i] = sig*Math.sqrt(i+1);
+    msg = 'RW best forecast: stays at last value y_T = '+y[n-1].toFixed(2)+'. Interval widens as √h.';
+  } else {
+    y = TSL.generateRandomWalk(n, drift, sig, seed);
+    fc = TSL.forecastRW(y[n-1], h, drift);
+    ci = new Array(h); for (let i=0;i<h;i++) ci[i] = sig*Math.sqrt(i+1);
+    msg = 'RW + drift: line slopes by '+drift.toFixed(2)+' per period; interval widens as √h.';
+  }
+  TSL.plotForecast('fc', y, fc, 'Forecast at horizon '+h, ci);
+  TSL.$('#msg').innerHTML = '<strong>Behavior:</strong> '+msg;
+}
+['mod','phi','drift','sig','h','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Best forecast at horizon 50 for a driftless RW with y_T=100 is:', options: ['0','50','100','Depends on horizon'], correct: 2, explain: 'Last observed value.' },
+  { q: 'AR(1) forecast variance saturates because:', options: ['Bias goes to zero','Shocks decay geometrically','Drift offsets variance'], correct: 1, explain: '|φ|<1 ⇒ finite long-run variance.' },
+  { q: 'Static forecast uses:', options: ['Future forecasts','Actual lagged y','Random draws'], correct: 1, explain: 'Static = one-step rolling with real data.' }
+], 'ch15');
+</script>
+</body></html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 4: Visualizing Time Series — TS Lab</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax = { tex: { inlineMath: [['\\(','\\)']] } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body><main class="page-shell">
+<section class="hero-card">
+  <div class="ch-label">Part I · Chapter 4</div>
+  <h1>Visualizing Time Series</h1>
+  <p class="intuition">Always plot the series before modeling. Trends, seasonality, outliers, breaks, and volatility clustering jump out visually long before any formal test confirms them.</p>
+</section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+  <div class="objective">Spot trend, seasonality, outliers, and structural breaks by eye.</div>
+  <div class="objective">Recognize volatility clustering vs constant variance.</div>
+  <div class="objective">Use moving averages to highlight underlying trend.</div>
+  <div class="objective">Decide what tests to run AFTER inspecting the plot.</div>
+</div></section>
+
+<section class="lab-grid">
+  <div class="control-panel">
+    <h3>Pattern toggles</h3>
+    <label><input type="checkbox" id="tTrend" checked> Trend</label>
+    <label><input type="checkbox" id="tSeas"> Seasonality (period 12)</label>
+    <label><input type="checkbox" id="tOut"> Outlier at t=60</label>
+    <label><input type="checkbox" id="tBreak"> Structural break at t=100</label>
+    <label><input type="checkbox" id="tVol"> Volatility clustering</label>
+    <label>MA window <span class="slider-row"><span></span><span class="val" id="vMA">10</span><span></span></span></label>
+    <input type="range" id="ma" min="0" max="30" step="1" value="10">
+    <div class="seed-row">Seed: <input type="number" id="seed" value="11"> <button id="regen">🔄 Regenerate</button></div>
+  </div>
+  <div class="chart-panel"><div id="chart" class="plot"></div></div>
+  <div class="interpretation-panel"><h3>Detective notes</h3>
+    <div id="notes" class="live-readout">Toggle features and look at the chart.</div>
+    <p class="muted">A modeler must FIRST look at the plot, then choose models that match observed structure.</p>
+  </div>
+</section>
+
+<section class="formula-box"><h3>📐 Decomposition</h3>
+<div class="formula-line">\[ y_t = \mu_t + s_t + d_t + h_t z_t \]</div>
+<div class="symbol-list">
+  <div><strong>μ_t</strong> <span>trend / level</span></div>
+  <div><strong>s_t</strong> <span>seasonal pattern</span></div>
+  <div><strong>d_t</strong> <span>dummy / outlier / break</span></div>
+  <div><strong>h_t</strong> <span>(possibly time-varying) volatility</span></div>
+</div></section>
+
+<section class="diagnostic"><h3>🔍 Decision tree (what to do next)</h3>
+<ul>
+  <li>Trend visible? → check stationarity (ADF, KPSS), consider differencing.</li>
+  <li>Seasonality? → seasonal dummies or SARIMA with seasonal differencing.</li>
+  <li>Structural break? → Chow / Zivot-Andrews tests, intervention dummy.</li>
+  <li>Volatility clustering? → ARCH/GARCH model on residuals.</li>
+  <li>Outlier? → additive outlier dummy; don't delete.</li>
+</ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"My ARIMA has low AIC and white residuals, so it's a good model."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>If the series has a visible structural break the student ignored, the "good" model is fitting a process that no longer exists. AIC and diagnostics can't fix a missed regime change.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Always plot first. Visible features force model-class choices that no information criterion can correct after the fact.</p></div>
+</section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Visible feature</th><th>Treatment</th></tr></thead><tbody>
+<tr><td>Trend</td><td>Difference or detrend</td></tr>
+<tr><td>Seasonality</td><td>Seasonal differencing, SARIMA, dummies</td></tr>
+<tr><td>Outlier</td><td>AO dummy at that period</td></tr>
+<tr><td>Structural break</td><td>Step dummy + slope dummy; Chow test</td></tr>
+<tr><td>Volatility clustering</td><td>GARCH on residuals</td></tr>
+</tbody></table></section>
+</main>
+
+<script src="../assets/js/common.js"></script>
+<script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(4); TSL.buildFooter(4);
+function refresh(){
+  const seed=parseInt(TSL.$('#seed').value); const rn=TSL.seededRandn(seed);
+  const n=150, y=new Array(n); const ma=parseInt(TSL.$('#ma').value); TSL.$('#vMA').textContent=ma;
+  const tT=TSL.$('#tTrend').checked, tS=TSL.$('#tSeas').checked, tO=TSL.$('#tOut').checked, tB=TSL.$('#tBreak').checked, tV=TSL.$('#tVol').checked;
+  let h=1; const sig0=0.6;
+  for (let t=0;t<n;t++){
+    const tr = tT ? 0.04*t : 0;
+    const se = tS ? 1.5*Math.sin(2*Math.PI*t/12) : 0;
+    const br = tB && t>=100 ? 3 : 0;
+    const ou = tO && t===60 ? 7 : 0;
+    if (tV){ h = 0.05 + 0.15*Math.pow(y[t-1]||0,2)*0.05 + 0.80*h; }
+    else { h = 1; }
+    const eps = Math.sqrt(tV?h:sig0)*rn();
+    y[t] = tr + se + br + ou + eps;
+  }
+  const traces = [{ y: y, name: 'observed', color: '#2563eb' }];
+  if (ma>1){ const mav = TSL.rollingMean(y, ma); traces.push({ y: mav, name: 'MA('+ma+')', color: '#b45309', dash: 'dot' }); }
+  TSL.plotMultiLine('chart', traces, 'Time-series detective view', 'value');
+
+  let notes = '';
+  if (tT) notes += '✓ Trend present — series climbs over time.<br>';
+  if (tS) notes += '✓ Seasonality — visible 12-period oscillation.<br>';
+  if (tO) notes += '⚠ Outlier near t=60.<br>';
+  if (tB) notes += '⚠ Structural break around t=100.<br>';
+  if (tV) notes += '✓ Volatility clustering — variance not constant.<br>';
+  if (!notes) notes = 'No features active. Add one to see a pattern.';
+  TSL.$('#notes').innerHTML = notes;
+}
+['tTrend','tSeas','tOut','tBreak','tVol','ma','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+if (document.readyState === 'complete') requestAnimationFrame(() => setTimeout(refresh, 0));
+else window.addEventListener('load', () => requestAnimationFrame(() => setTimeout(refresh, 0)));
+TSL.Quiz.render('#quiz', [
+  { q: 'Which feature MOST changes the model class you should choose?', options: ['Color of the line','Structural break','Sample size','Axis label'], correct: 1, explain: 'Breaks change the data-generating process; need intervention models.' },
+  { q: 'You see returns with calm and volatile clusters. Next step is:', options: ['Random walk model','GARCH-class variance model','OLS on levels','Ignore — looks random'], correct: 1, explain: 'Volatility clustering ⇒ ARCH/GARCH.' },
+  { q: 'True/False: information criteria can substitute for plotting the data.', options: ['True','False'], correct: 1, explain: 'AIC/BIC do not detect breaks, outliers, or regime changes.' }
+], 'ch04');
+</script>
+</body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 21: ECM — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VI · Chapter 21</div>
+<h1>Error Correction Models</h1>
+<p class="intuition">When variables are cointegrated, deviations from long-run equilibrium are corrected over time. The speed-of-adjustment coefficient λ must be NEGATIVE for stability.</p>
+<div class="key-formula">\( \Delta y_t = \gamma \Delta x_t + \lambda\, e_{t-1} + u_t,\;\; -1<\lambda<0 \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Estimate ECM by 2-step Engle-Granger.</div>
+<div class="objective">Interpret λ as fraction of disequilibrium corrected per period.</div>
+<div class="objective">Compute half-life of disequilibrium.</div>
+<div class="objective">Avoid sign-of-λ trap.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Equilibrium Correction Simulator</h3>
+<label>λ (speed of adjustment) <span class="slider-row"><span>-1</span><span class="val" id="vL">-0.3</span><span>+0.5</span></span></label>
+<input type="range" id="lam" min="-1" max="0.5" step="0.02" value="-0.3">
+<label>γ (short-run effect of Δx) <span class="slider-row"><span></span><span class="val" id="vG">0.5</span><span></span></span></label>
+<input type="range" id="gam" min="-2" max="2" step="0.05" value="0.5">
+<label>β (long-run relation) <span class="slider-row"><span></span><span class="val" id="vB">1.0</span><span></span></span></label>
+<input type="range" id="beta" min="-2" max="3" step="0.05" value="1">
+<label>Shock at t=20</label>
+<select id="shock"><option value="x">to x (one-time pulse)</option><option value="y">to y (one-time pulse)</option></select>
+<div class="seed-row">Seed: <input type="number" id="seed" value="21"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="series" class="plot"></div><div id="ect" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Adjustment</h3>
+<div class="live-readout"><strong>λ:</strong> <span class="num" id="rL">—</span></div>
+<div class="live-readout"><strong>Fraction corrected/period:</strong> <span class="num" id="rPct">—</span> %</div>
+<div class="live-readout"><strong>Half-life of disequilibrium:</strong> <span class="num" id="rHL">—</span> periods</div>
+<div id="stab"></div></div></section>
+
+<section class="formula-box"><h3>📐 ECM</h3>
+<div class="formula-line">\[ \Delta y_t = \gamma \Delta x_t + \lambda\,(y_{t-1}-\alpha-\beta x_{t-1}) + u_t \]</div>
+<div class="symbol-list">
+<div><strong>λ &lt; 0</strong> <span>convergence to equilibrium</span></div>
+<div><strong>λ = 0</strong> <span>no correction (cointegration fails)</span></div>
+<div><strong>λ &gt; 0</strong> <span>divergence — unstable</span></div>
+<div><strong>Half-life</strong> <span>ln(0.5) / ln(1+λ)</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>After a shock, the ECT (y − βx) returns to zero — the rubber band pulls back.</li>
+<li>Larger |λ| ⇒ faster correction.</li>
+<li>λ &gt; 0 produces visible divergence (the chart EXPANDS away).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Positive λ means strong correction."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>For stability, λ must be NEGATIVE: when residual is above equilibrium (positive), λ·e_{t-1} pushes Δy DOWN to bring it back.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Need −1 &lt; λ &lt; 0. Magnitude |λ| measures correction speed; sign must be negative.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>λ value</th><th>Interpretation</th></tr></thead><tbody>
+<tr><td>−1</td><td>Full correction in one period</td></tr>
+<tr><td>−0.3</td><td>30% of gap corrected per period</td></tr>
+<tr><td>0</td><td>No error correction — likely no cointegration</td></tr>
+<tr><td>+0.2</td><td>UNSTABLE — moves away from equilibrium</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(21); TSL.buildFooter(21);
+function refresh(){
+  const lam=parseFloat(TSL.$('#lam').value), gam=parseFloat(TSL.$('#gam').value);
+  const beta=parseFloat(TSL.$('#beta').value), shock=TSL.$('#shock').value, seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vL').textContent=lam.toFixed(2); TSL.$('#vG').textContent=gam.toFixed(2); TSL.$('#vB').textContent=beta.toFixed(2);
+  TSL.$('#rL').textContent=lam.toFixed(2);
+  TSL.$('#rPct').textContent=(Math.abs(lam)*100).toFixed(0);
+  TSL.$('#rHL').textContent = (lam<0 && lam>-1) ? (Math.log(0.5)/Math.log(1+lam)).toFixed(1) : 'n/a';
+  TSL.$('#stab').innerHTML = (lam<0 && lam>-1) ? '<div class="callout success">✓ Stable adjustment.</div>' : (lam===0 ? '<div class="callout warning">⚠ No correction.</div>' : '<div class="callout danger">⚠ Unstable (λ outside −1..0).</div>');
+  const n=80, rn=TSL.seededRandn(seed);
+  const x=new Array(n).fill(0), y=new Array(n).fill(0);
+  for (let t=1;t<n;t++){
+    const dxshock = shock==='x' && t===20 ? 3 : 0;
+    const dyshock = shock==='y' && t===20 ? 3 : 0;
+    x[t] = x[t-1] + 0.1*rn() + dxshock;
+    const ect = y[t-1] - beta*x[t-1];
+    y[t] = y[t-1] + gam*(x[t]-x[t-1]) + lam*ect + 0.1*rn() + dyshock;
+  }
+  const ect = y.map((v,i)=>v-beta*x[i]);
+  TSL.plotMultiLine('series', [{ y: x, name: 'x', color: '#2563eb' }, { y: y, name: 'y', color: '#b45309' }, { y: x.map(v=>v*beta), name: 'βx (equilibrium)', color: '#0f766e', dash: 'dot' }], 'Series + equilibrium', 'value');
+  TSL.plotResidual('ect', ect, 'ECT = y − βx (should mean-revert)');
+}
+['lam','gam','beta','shock','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'For stable ECM, λ must be:', options: ['Positive','Negative','Zero','> 1'], correct: 1, explain: '−1 < λ < 0 ensures convergence.' },
+  { q: 'λ = −0.5 means:', options: ['50% disequilibrium corrected each period','Series doubles','Variance halves','RW behavior'], correct: 0, explain: 'Half the gap closed per period.' },
+  { q: 'ECM only valid if:', options: ['x is normal','y, x are cointegrated','σ small','n large'], correct: 1, explain: 'Cointegration is the prerequisite.' }
+], 'ch21');
+</script>
+</body></html>

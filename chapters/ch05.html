@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 5: Smoothing — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part II · Chapter 5</div>
+<h1>Smoothing and Trend Estimation</h1>
+<p class="intuition">A moving average reveals the underlying trend by averaging out noise — at the cost of lag and smoothed-over turning points.</p>
+<div class="key-formula">\( \tilde y_t = \frac{1}{k}\sum_{i=0}^{k-1} y_{t-i} \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute simple and exponential moving averages.</div>
+<div class="objective">Choose window size k that balances smoothness vs lag.</div>
+<div class="objective">Understand bias from large windows at turning points.</div>
+<div class="objective">Distinguish smoothers (descriptive) from forecasters.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Smoother Lab</h3>
+<label>Window k <span class="slider-row"><span>2</span><span class="val" id="vK">10</span><span>40</span></span></label>
+<input type="range" id="k" min="2" max="40" step="1" value="10">
+<label>Noise σ <span class="slider-row"><span></span><span class="val" id="vS">1.0</span><span></span></span></label>
+<input type="range" id="s" min="0" max="3" step="0.05" value="1">
+<label>Trend slope <span class="slider-row"><span></span><span class="val" id="vT">0.03</span><span></span></span></label>
+<input type="range" id="t" min="-0.1" max="0.1" step="0.005" value="0.03">
+<label>EWMA α <span class="slider-row"><span>0</span><span class="val" id="vA">0.30</span><span>1</span></span></label>
+<input type="range" id="a" min="0.01" max="0.99" step="0.01" value="0.3">
+<div class="seed-row">Seed: <input type="number" id="seed" value="3"> <button id="regen">🔄 Regenerate</button></div>
+</div>
+<div class="chart-panel"><div id="chart" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Interpretation</h3>
+<div class="live-readout"><strong>k (SMA window):</strong> <span class="num" id="rK">—</span></div>
+<div class="live-readout"><strong>EWMA effective lag:</strong> <span class="num" id="rLag">—</span></div>
+<p class="muted">Large k = very smooth, large lag. Large α = reactive EWMA. Use shorter window to catch turning points.</p></div></section>
+
+<section class="formula-box"><h3>📐 Smoothing formulas</h3>
+<div class="formula-line">\[ \text{SMA: } \tilde y_t = \tfrac{1}{k}\sum_{i=0}^{k-1} y_{t-i} \qquad \text{EWMA: } \tilde y_t = \alpha y_t + (1-\alpha)\tilde y_{t-1} \]</div>
+<div class="symbol-list">
+<div><strong>k</strong> <span>window length (SMA)</span></div>
+<div><strong>α</strong> <span>weight on newest obs (EWMA)</span></div>
+<div><strong>Lag (SMA)</strong> <span>≈ (k-1)/2 periods</span></div>
+<div><strong>Lag (EWMA)</strong> <span>≈ (1-α)/α</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3>
+<ul><li>Smoother line lags behind the actual series — visible at turning points.</li>
+<li>Larger k or smaller α exaggerates the lag.</li>
+<li>Smoothing is descriptive — use a real forecasting model (e.g., AR or ETS) to make predictions.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Bigger window is always better because the line looks cleaner."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>A larger window over-smooths and hides exactly the turning points you want to detect (recessions, regime shifts).</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Choose window k for the lag tolerance you have. Validate on out-of-sample turning-point detection, not visual smoothness.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Method</th><th>Lag</th><th>Best for</th></tr></thead><tbody>
+<tr><td>SMA(k)</td><td>(k-1)/2</td><td>Visual trend, trading signals</td></tr>
+<tr><td>EWMA(α)</td><td>(1-α)/α</td><td>Adaptive smoothing</td></tr>
+<tr><td>Holt</td><td>—</td><td>Trending series, basic forecast</td></tr>
+<tr><td>Holt-Winters</td><td>—</td><td>Trend + seasonality</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(5); TSL.buildFooter(5);
+function refresh(){
+  const k=parseInt(TSL.$('#k').value), s=parseFloat(TSL.$('#s').value);
+  const tr=parseFloat(TSL.$('#t').value), a=parseFloat(TSL.$('#a').value);
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vK').textContent=k; TSL.$('#vS').textContent=s.toFixed(2);
+  TSL.$('#vT').textContent=tr.toFixed(3); TSL.$('#vA').textContent=a.toFixed(2);
+  TSL.$('#rK').textContent=k; TSL.$('#rLag').textContent=((1-a)/a).toFixed(1);
+  const n=200, noise=TSL.generateWhiteNoise(n, s, seed);
+  const y=noise.map((e,i)=>tr*i + 2*Math.sin(2*Math.PI*i/24) + e);
+  const sma=TSL.rollingMean(y, k);
+  const ewma=[]; let prev=y[0];
+  for (let i=0;i<n;i++){ prev = a*y[i] + (1-a)*prev; ewma.push(prev); }
+  TSL.plotMultiLine('chart', [
+    { y: y, name: 'raw y_t', color: '#94a3b8' },
+    { y: sma, name: 'SMA('+k+')', color: '#2563eb' },
+    { y: ewma, name: 'EWMA(α='+a.toFixed(2)+')', color: '#b45309' }
+  ], 'Smoothers vs raw series', 'value');
+}
+['k','s','t','a','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh, 80)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+if (document.readyState === 'complete') requestAnimationFrame(() => setTimeout(refresh, 0));
+else window.addEventListener('load', () => requestAnimationFrame(() => setTimeout(refresh, 0)));
+TSL.Quiz.render('#quiz', [
+  { q: 'Increasing k in SMA does WHAT to lag?', options: ['Decreases','Increases','No change'], correct: 1, explain: 'Lag ≈ (k-1)/2; larger k = larger lag.' },
+  { q: 'EWMA with α=0.95 is:', options: ['Very smooth','Very reactive (chasing noise)','Equivalent to SMA(20)'], correct: 1, explain: 'High α puts most weight on newest observation.' },
+  { q: 'True/False: a smoother MA line is a better FORECAST.', options: ['True','False'], correct: 1, explain: 'Smoothing ≠ forecasting; it lags.' }
+], 'ch05');
+</script>
+</body></html>

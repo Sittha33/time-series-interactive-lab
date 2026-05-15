@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 22: VAR Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VII · Chapter 22</div>
+<h1>VAR Models</h1>
+<p class="intuition">In a vector autoregression each variable depends on its own lags AND lags of all other variables — every variable is endogenous. Individual coefficients are hard to interpret; use IRFs (Ch 23).</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Write a 2-variable VAR(1) system.</div>
+<div class="objective">Simulate joint feedback between inflation and interest rate.</div>
+<div class="objective">Recognize VAR stability via eigenvalues.</div>
+<div class="objective">Understand why IRFs are needed for interpretation.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Two-Variable Feedback</h3>
+<label>β₁₁ (π → π) <span class="slider-row"><span></span><span class="val" id="vB11">0.6</span><span></span></span></label>
+<input type="range" id="b11" min="-0.9" max="0.9" step="0.02" value="0.6">
+<label>β₁₂ (r → π) <span class="slider-row"><span></span><span class="val" id="vB12">-0.2</span><span></span></span></label>
+<input type="range" id="b12" min="-0.9" max="0.9" step="0.02" value="-0.2">
+<label>β₂₁ (π → r) <span class="slider-row"><span></span><span class="val" id="vB21">0.3</span><span></span></span></label>
+<input type="range" id="b21" min="-0.9" max="0.9" step="0.02" value="0.3">
+<label>β₂₂ (r → r) <span class="slider-row"><span></span><span class="val" id="vB22">0.7</span><span></span></span></label>
+<input type="range" id="b22" min="-0.9" max="0.9" step="0.02" value="0.7">
+<label>Shock to inflation at t=20 <span class="slider-row"><span></span><span class="val" id="vS1">2</span><span></span></span></label>
+<input type="range" id="s1" min="0" max="5" step="0.2" value="2">
+<label>Shock to rate at t=40 <span class="slider-row"><span></span><span class="val" id="vS2">0</span><span></span></span></label>
+<input type="range" id="s2" min="0" max="5" step="0.2" value="0">
+<div class="seed-row">Seed: <input type="number" id="seed" value="22"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="series" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Stability check</h3>
+<div class="live-readout"><strong>Max |eigenvalue|:</strong> <span class="num" id="rE">—</span></div>
+<div id="rStab"></div>
+<p class="muted">VAR is stable if all eigenvalues of the companion matrix have modulus &lt; 1.</p></div></section>
+
+<section class="formula-box"><h3>📐 VAR(1) 2-variable</h3>
+<div class="formula-line">\[ \pi_t = \beta_{11}\pi_{t-1} + \beta_{12} r_{t-1} + u_{1t} \]</div>
+<div class="formula-line">\[ r_t = \beta_{21}\pi_{t-1} + \beta_{22} r_{t-1} + u_{2t} \]</div>
+<div class="symbol-list">
+<div><strong>β_{ij}</strong> <span>effect of lagged j on i</span></div>
+<div><strong>Diagonal</strong> <span>own-persistence</span></div>
+<div><strong>Off-diagonal</strong> <span>cross-feedback</span></div>
+<div><strong>IRFs</strong> <span>see Ch 23 for proper interpretation</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Shocks propagate through both variables via cross-lags.</li>
+<li>Strong own-persistence (β₁₁, β₂₂ near 1) creates long-lived responses.</li>
+<li>Negative cross terms can produce oscillating responses.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"β₁₂ = −0.2 means a 1pp rise in r reduces π by 0.2pp."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Individual VAR coefficients ignore the feedback. A "shock to r" propagates through π's reaction, then r reacts to that, etc. Use IRFs.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>For policy interpretation, report orthogonalized IRFs and FEVD over horizon h, with ordering assumption stated.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Concept</th><th>Note</th></tr></thead><tbody>
+<tr><td>VAR(p)</td><td>k variables, p lags, each variable on all lags</td></tr>
+<tr><td>Stability</td><td>All companion eigenvalues |λ| &lt; 1</td></tr>
+<tr><td>Interpretation</td><td>IRFs + FEVD, not individual coefficients</td></tr>
+<tr><td>Lag selection</td><td>AIC, BIC, HQ + diagnostics</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(22); TSL.buildFooter(22);
+function refresh(){
+  const b11=parseFloat(TSL.$('#b11').value), b12=parseFloat(TSL.$('#b12').value);
+  const b21=parseFloat(TSL.$('#b21').value), b22=parseFloat(TSL.$('#b22').value);
+  const s1=parseFloat(TSL.$('#s1').value), s2=parseFloat(TSL.$('#s2').value);
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vB11').textContent=b11.toFixed(2); TSL.$('#vB12').textContent=b12.toFixed(2);
+  TSL.$('#vB21').textContent=b21.toFixed(2); TSL.$('#vB22').textContent=b22.toFixed(2);
+  TSL.$('#vS1').textContent=s1.toFixed(1); TSL.$('#vS2').textContent=s2.toFixed(1);
+  // eigenvalues of 2x2 matrix [[b11,b12],[b21,b22]]
+  const tr=b11+b22, det=b11*b22 - b12*b21;
+  const disc=tr*tr/4 - det;
+  let l1, l2;
+  if (disc>=0){ l1=tr/2 + Math.sqrt(disc); l2=tr/2 - Math.sqrt(disc); }
+  else { l1=Math.sqrt(tr*tr/4 + (-disc)); l2=l1; }
+  const maxE = Math.max(Math.abs(l1), Math.abs(l2));
+  TSL.$('#rE').textContent=maxE.toFixed(3);
+  TSL.$('#rStab').innerHTML = maxE<1 ? '<div class="callout success">✓ Stable VAR.</div>' : '<div class="callout danger">⚠ Unstable (explosive).</div>';
+  const rn=TSL.seededRandn(seed); const n=80;
+  const pi=new Array(n).fill(0), r=new Array(n).fill(0);
+  for (let t=1;t<n;t++){
+    const u1 = (t===20 ? s1 : 0) + 0.3*rn();
+    const u2 = (t===40 ? s2 : 0) + 0.3*rn();
+    pi[t] = b11*pi[t-1] + b12*r[t-1] + u1;
+    r[t]  = b21*pi[t-1] + b22*r[t-1] + u2;
+  }
+  TSL.plotMultiLine('series', [{ y: pi, name: 'inflation π', color: '#2563eb' }, { y: r, name: 'rate r', color: '#b45309' }], 'VAR(1) joint dynamics + shocks', 'value');
+}
+['b11','b12','b21','b22','s1','s2','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'VAR(p) stability requires:', options: ['All coefficients < 1','All eigenvalues of companion matrix < 1 in modulus','Trace = 0','Determinant > 0'], correct: 1, explain: 'Companion-matrix eigenvalue condition.' },
+  { q: 'Individual VAR coefficients should be interpreted via:', options: ['Just their sign and magnitude','IRFs and FEVD','t-stats only','RMSE'], correct: 1, explain: 'Feedback makes coefficient interpretation hard.' },
+  { q: 'A VAR with 3 variables and 4 lags has how many coefficients per equation?', options: ['3','4','12','9'], correct: 2, explain: '3 × 4 = 12 lagged regressors per equation.' }
+], 'ch22');
+</script>
+</body></html>

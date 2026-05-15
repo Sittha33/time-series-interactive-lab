@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 3: Probability & Statistics — TS Lab</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax = { tex: { inlineMath: [['\\(','\\)']] } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body><main class="page-shell">
+<section class="hero-card">
+  <div class="ch-label">Part I · Chapter 3</div>
+  <h1>Probability & Statistics Review</h1>
+  <p class="intuition">Two assets with the same mean return can have wildly different risk. Variance, skewness, and kurtosis reveal what the mean hides.</p>
+  <div class="key-formula">\( \mu = E[X], \quad \sigma^2 = E[(X-\mu)^2] \)</div>
+</section>
+
+<section class="card">
+  <h2>Learning objectives</h2>
+  <div class="objectives-grid">
+    <div class="objective">Understand mean, variance, skewness, kurtosis.</div>
+    <div class="objective">Compare normal vs fat-tailed distributions.</div>
+    <div class="objective">Read histograms and density curves.</div>
+    <div class="objective">Connect distribution shape to financial risk.</div>
+  </div>
+</section>
+
+<section class="lab-grid">
+  <div class="control-panel">
+    <h3>Distribution & Risk</h3>
+    <label>Mean μ <span class="slider-row"><span></span><span class="val" id="vMu">0.05</span><span></span></span></label>
+    <input type="range" id="mu" min="-1" max="1" step="0.01" value="0.05">
+    <label>Std dev σ <span class="slider-row"><span></span><span class="val" id="vSig">1.0</span><span></span></span></label>
+    <input type="range" id="sig" min="0.1" max="3" step="0.05" value="1">
+    <label>Distribution</label>
+    <select id="dist"><option value="normal">Normal</option><option value="t">Student-t (df=4, fat tails)</option></select>
+    <label>Sample size n <span class="slider-row"><span></span><span class="val" id="vN">500</span><span></span></span></label>
+    <input type="range" id="n" min="100" max="2000" step="50" value="500">
+    <div class="seed-row">Seed: <input type="number" id="seed" value="7"> <button id="regen">🔄 Regenerate</button></div>
+  </div>
+  <div class="chart-panel"><div id="hist" class="plot"></div><div id="scatter" class="plot"></div></div>
+  <div class="interpretation-panel">
+    <h3>Sample statistics</h3>
+    <div class="live-readout"><strong>Sample mean:</strong> <span class="num" id="sMu">—</span></div>
+    <div class="live-readout"><strong>Sample variance:</strong> <span class="num" id="sVar">—</span></div>
+    <div class="live-readout"><strong>Skewness:</strong> <span class="num" id="sSk">—</span></div>
+    <div class="live-readout"><strong>Excess kurtosis:</strong> <span class="num" id="sKu">—</span></div>
+    <p class="muted">Student-t has kurtosis ≫ 0; normal has ≈ 0. Negative skew = downside fatter.</p>
+  </div>
+</section>
+
+<section class="formula-box">
+  <h3>📐 Moments</h3>
+  <div class="formula-line">\[ \text{Skewness} = E\!\left[\!\left(\frac{X-\mu}{\sigma}\right)^{\!3}\right],\quad \text{Excess kurtosis} = E\!\left[\!\left(\frac{X-\mu}{\sigma}\right)^{\!4}\right]-3 \]</div>
+  <div class="symbol-list">
+    <div><strong>μ</strong> <span>mean (location)</span></div>
+    <div><strong>σ</strong> <span>spread (volatility)</span></div>
+    <div><strong>skew</strong> <span>asymmetry: + = right tail; − = left tail</span></div>
+    <div><strong>kurt</strong> <span>tail thickness: 0 = normal, &gt; 0 = fat tails</span></div>
+  </div>
+</section>
+
+<section class="diagnostic">
+  <h3>🔍 Reading the plots</h3>
+  <ul>
+    <li>The histogram shows the empirical distribution; switching to Student-t produces visible extreme tails.</li>
+    <li>For the same μ, two distributions can have very different probability of large losses.</li>
+    <li>Sample skewness/kurtosis bounce around their true value — bigger n = more stable.</li>
+  </ul>
+</section>
+
+<section class="exam-trap">
+  <h3>⚠️ Exam trap</h3>
+  <div class="trap-block wrong"><div class="label">Student says</div><p>"Mean return is positive, so the strategy is safe."</p></div>
+  <div class="trap-block why"><div class="label">Why this is wrong</div><p>A positive mean can coexist with huge volatility, fat tails, and devastating drawdowns. Mean is one number — risk needs the whole distribution.</p></div>
+  <div class="trap-block right"><div class="label">Correct interpretation</div><p>Report mean + σ + kurtosis + worst-case quantile (VaR / drawdown). Mean alone is uninformative for risk.</p></div>
+</section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet">
+  <h2>📋 Cheat sheet</h2>
+  <table><thead><tr><th>Statistic</th><th>Meaning</th><th>Exam tip</th></tr></thead><tbody>
+  <tr><td>Mean μ</td><td>Average outcome</td><td>One-number summary — never sufficient for risk</td></tr>
+  <tr><td>Variance σ²</td><td>Spread around the mean</td><td>Equal to second central moment</td></tr>
+  <tr><td>Skewness</td><td>Asymmetry</td><td>Stock returns typically slightly negative</td></tr>
+  <tr><td>Excess kurtosis</td><td>Tail thickness vs normal</td><td>Equity returns: 3–10 (very fat tails)</td></tr>
+  </tbody></table>
+</section>
+</main>
+<script src="../assets/js/common.js"></script>
+<script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(3); TSL.buildFooter(3);
+function refresh(){
+  const mu=parseFloat(TSL.$('#mu').value), sig=parseFloat(TSL.$('#sig').value);
+  const n=parseInt(TSL.$('#n').value), dist=TSL.$('#dist').value, seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vMu').textContent=mu.toFixed(2); TSL.$('#vSig').textContent=sig.toFixed(2); TSL.$('#vN').textContent=n;
+  const rng=TSL.mulberry32(seed); const data=[];
+  for (let i=0;i<n;i++){
+    let z;
+    if (dist==='normal') z=TSL.seededRandn(seed+i)(); // small variation
+    else z = TSL.tDistRandom(4, rng);
+    data.push(mu + sig*z);
+  }
+  TSL.plotHistogram('hist', data, 'Sample distribution (' + dist + ')', 40);
+  TSL.plotScatter('scatter', data.map((_,i)=>i+1), data, 'Simulated draws (time index)', 't', 'value');
+  TSL.$('#sMu').textContent=TSL.mean(data).toFixed(3);
+  TSL.$('#sVar').textContent=TSL.variance(data).toFixed(3);
+  TSL.$('#sSk').textContent=TSL.skewness(data).toFixed(2);
+  TSL.$('#sKu').textContent=TSL.kurtosis(data).toFixed(2);
+}
+const deb = TSL.debounce(refresh, 100);
+['mu','sig','dist','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', deb));
+TSL.$('#regen').addEventListener('click', ()=>{ TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh(); });
+refresh();
+
+TSL.Quiz.render('#quiz', [
+  { q: 'For a normal distribution, excess kurtosis equals approximately:', options: ['0','3','-3','infinite'], correct: 0, explain: 'Excess kurtosis is kurtosis − 3, so normal = 0.' },
+  { q: 'Two assets have identical mean and σ. Asset A has kurtosis 0; asset B has kurtosis 9. Which has higher tail risk?', options: ['A', 'B', 'Identical'], correct: 1, explain: 'Higher kurtosis → fatter tails → more extreme moves.' },
+  { q: 'Negative skewness in equity returns means:', options: ['Big positive returns more likely', 'Big NEGATIVE returns more likely than under symmetric distribution', 'Mean is negative', 'No tail risk'], correct: 1, explain: 'Crashes (left-tail events) are amplified.' }
+], 'ch03');
+</script>
+</body></html>

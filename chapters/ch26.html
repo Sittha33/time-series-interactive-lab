@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 26: GARCH Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VIII · Chapter 26</div>
+<h1>GARCH Models</h1>
+<p class="intuition">GARCH adds lagged variance to ARCH: volatility has memory. α + β controls persistence; α + β &lt; 1 for stationarity, α + β near 1 ⇒ slowly decaying volatility shocks.</p>
+<div class="key-formula">\( h_t = \omega + \alpha\, \varepsilon_{t-1}^2 + \beta\, h_{t-1} \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Simulate GARCH(1,1) and read α + β persistence.</div>
+<div class="objective">Compute long-run unconditional variance.</div>
+<div class="objective">Recognize IGARCH (α+β=1) and instability.</div>
+<div class="objective">Forecast volatility into the future.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>GARCH Volatility Memory</h3>
+<label>ω <span class="slider-row"><span></span><span class="val" id="vO">0.10</span><span></span></span></label>
+<input type="range" id="om" min="0.01" max="1" step="0.01" value="0.1">
+<label>α (ARCH) <span class="slider-row"><span></span><span class="val" id="vA">0.10</span><span></span></span></label>
+<input type="range" id="al" min="0" max="0.5" step="0.01" value="0.1">
+<label>β (GARCH) <span class="slider-row"><span></span><span class="val" id="vB">0.85</span><span></span></span></label>
+<input type="range" id="be" min="0" max="0.99" step="0.01" value="0.85">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">600</span><span></span></span></label>
+<input type="range" id="n" min="100" max="1500" step="20" value="600">
+<label>Forecast horizon h <span class="slider-row"><span></span><span class="val" id="vH">30</span><span></span></span></label>
+<input type="range" id="h" min="1" max="60" step="1" value="30">
+<div class="seed-row">Seed: <input type="number" id="seed" value="26"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="vol" class="plot"></div><div id="fc" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Persistence</h3>
+<div class="live-readout"><strong>α + β:</strong> <span class="num" id="rAB">—</span></div>
+<div class="live-readout"><strong>Long-run variance:</strong> <span class="num" id="rLR">—</span></div>
+<div class="live-readout"><strong>Volatility half-life:</strong> <span class="num" id="rHL">—</span> periods</div>
+<div id="warn"></div></div></section>
+
+<section class="formula-box"><h3>📐 GARCH(1,1)</h3>
+<div class="formula-line">\[ h_t = \omega + \alpha\, \varepsilon_{t-1}^2 + \beta\, h_{t-1} \]</div>
+<div class="formula-line">\[ \bar h = \frac{\omega}{1-\alpha-\beta} \;\;\text{ (if }\alpha+\beta<1\text{)} \]</div>
+<div class="formula-line">\[ \text{Half-life: } \frac{\ln 0.5}{\ln(\alpha+\beta)} \]</div>
+<div class="symbol-list">
+<div><strong>ω &gt; 0</strong> <span>floor variance</span></div>
+<div><strong>α</strong> <span>shock impact (ARCH)</span></div>
+<div><strong>β</strong> <span>volatility persistence</span></div>
+<div><strong>α + β &lt; 1</strong> <span>stationarity / mean reversion</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Conditional volatility √h_t rises during clusters of large |returns| and decays during calm periods.</li>
+<li>Forecast horizon: variance reverts geometrically to long-run mean.</li>
+<li>α+β = 0.98 ⇒ shocks ~ 34 periods to halve (slow). α+β = 0.6 ⇒ shocks decay quickly.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"α + β ≈ 0.99 means volatility decays fast."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>α + β CLOSE TO 1 means VERY SLOW decay (long memory). At α+β = 0.99, half-life is ~69 periods. Variance only mean-reverts when α+β &lt; 1, and the closer to 1, the slower.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Half-life = ln(0.5)/ln(α+β). Use this to communicate volatility persistence in actual horizon units.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>α+β</th><th>Persistence</th><th>Half-life (periods)</th></tr></thead><tbody>
+<tr><td>0.5</td><td>Fast decay</td><td>≈ 1</td></tr>
+<tr><td>0.9</td><td>Moderate</td><td>≈ 6.6</td></tr>
+<tr><td>0.95</td><td>High</td><td>≈ 13.5</td></tr>
+<tr><td>0.99</td><td>Very high</td><td>≈ 69</td></tr>
+<tr><td>1.0</td><td>IGARCH — no mean reversion</td><td>∞</td></tr>
+<tr><td>&gt; 1</td><td>UNSTABLE</td><td>n/a</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(26); TSL.buildFooter(26);
+function refresh(){
+  const om=parseFloat(TSL.$('#om').value), al=parseFloat(TSL.$('#al').value);
+  const be=parseFloat(TSL.$('#be').value), n=parseInt(TSL.$('#n').value);
+  const h=parseInt(TSL.$('#h').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vO').textContent=om.toFixed(2); TSL.$('#vA').textContent=al.toFixed(2);
+  TSL.$('#vB').textContent=be.toFixed(2); TSL.$('#vN').textContent=n; TSL.$('#vH').textContent=h;
+  const ab = al+be;
+  TSL.$('#rAB').textContent=ab.toFixed(3);
+  TSL.$('#rLR').textContent = ab<1 ? (om/(1-ab)).toFixed(3) : 'undefined';
+  TSL.$('#rHL').textContent = (ab>0 && ab<1) ? (Math.log(0.5)/Math.log(ab)).toFixed(1) : 'n/a';
+  TSL.$('#warn').innerHTML = ab>=1 ? '<div class="callout danger">⚠ α+β ≥ 1: IGARCH / non-stationary variance.</div>' : (ab>0.97 ? '<div class="callout warning">⚠ Very persistent volatility (close to IGARCH).</div>' : '<div class="callout success">✓ Stable GARCH(1,1).</div>');
+  const sim = TSL.generateGARCH(n, om, al, be, seed);
+  TSL.plotVolatility('vol', sim.returns, sim.variance.map(v=>Math.sqrt(v)), 'GARCH(1,1) returns + √h_t');
+  // Forecast variance ahead: h_{T+k} = ω + (α+β) h_{T+k-1}
+  const lastE = sim.returns[sim.returns.length-1];
+  const lastH = sim.variance[sim.variance.length-1];
+  const fc = new Array(h);
+  let hk = om + al*lastE*lastE + be*lastH;
+  for (let k=0;k<h;k++){ fc[k]=Math.sqrt(hk); hk = om + ab*hk; }
+  const hist = sim.variance.slice(-60).map(v=>Math.sqrt(v));
+  TSL.plotForecast('fc', hist, fc, 'Volatility forecast (√h)');
+}
+['om','al','be','n','h','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'GARCH stationarity requires:', options: ['α < 1','β < 1','α + β < 1','ω = 0'], correct: 2, explain: 'Standard GARCH stationarity condition.' },
+  { q: 'Long-run unconditional variance is:', options: ['ω','ω/(1−α)','ω/(1−α−β)','ω·(α+β)'], correct: 2, explain: 'Mean reversion target.' },
+  { q: 'Half-life of variance shock for α+β=0.95 is approximately:', options: ['1','3','13','100'], correct: 2, explain: 'ln(0.5)/ln(0.95) ≈ 13.5.' },
+  { q: 'GARCH forecasts:', options: ['Direction of returns','Conditional VARIANCE / risk','Mean of returns','Skewness'], correct: 1, explain: 'Variance, not direction.' }
+], 'ch26');
+</script>
+</body></html>

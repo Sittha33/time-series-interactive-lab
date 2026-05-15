@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 1: Why Time Series Matter — TS Lab</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<main class="page-shell">
+  <section class="hero-card">
+    <div class="ch-label">Part I · Chapter 1</div>
+    <h1>Why Time Series Matter</h1>
+    <p class="intuition">Time series are ordered observations indexed by time. They typically combine a slow-moving <strong>trend</strong>, recurring <strong>cycles</strong> or seasonality, and random <strong>noise</strong> — and the order matters because today depends on yesterday.</p>
+    <div class="key-formula">\( y_t = \text{Trend}_t + \text{Cycle}_t + \text{Noise}_t \)</div>
+  </section>
+
+  <section class="card">
+    <h2>Learning objectives</h2>
+    <div class="objectives-grid">
+      <div class="objective">Explain what makes time-series data different from cross-sectional data.</div>
+      <div class="objective">Identify trend, cycle, and noise components visually.</div>
+      <div class="objective">Understand why ordering and dependence matter.</div>
+      <div class="objective">Recognize how economic series like inflation or GDP combine these components.</div>
+    </div>
+  </section>
+
+  <section class="lab-grid">
+    <div class="control-panel">
+      <h3>Components Lab</h3>
+      <label>Trend slope <span class="slider-row"><span>weak</span><span class="val" id="vTrend">0.03</span><span>strong</span></span></label>
+      <input type="range" id="trend" min="-0.10" max="0.10" step="0.005" value="0.03">
+      <label>Cycle amplitude <span class="slider-row"><span>flat</span><span class="val" id="vAmp">2.0</span><span>large</span></span></label>
+      <input type="range" id="amp" min="0" max="6" step="0.1" value="2">
+      <label>Noise level (σ) <span class="slider-row"><span>quiet</span><span class="val" id="vSig">1.0</span><span>noisy</span></span></label>
+      <input type="range" id="sig" min="0" max="3" step="0.05" value="1">
+      <label>Sample size n <span class="slider-row"><span>50</span><span class="val" id="vN">200</span><span>400</span></span></label>
+      <input type="range" id="n" min="50" max="400" step="10" value="200">
+      <div class="seed-row">Seed: <input type="number" id="seed" value="1"> <button id="regen">🔄 Regenerate</button></div>
+    </div>
+    <div class="chart-panel">
+      <div id="chart" class="plot"></div>
+    </div>
+    <div class="interpretation-panel">
+      <h3>Live interpretation</h3>
+      <div class="live-readout"><strong>Trend slope:</strong> <span class="num" id="rTrend">—</span> per period</div>
+      <div class="live-readout"><strong>Cycle period:</strong> 24 steps (fixed)</div>
+      <div class="live-readout"><strong>Noise σ:</strong> <span class="num" id="rSig">—</span></div>
+      <p class="muted">Larger trend slope → series climbs steadily. Larger amplitude → larger swings. Larger noise → harder to see structure.</p>
+    </div>
+  </section>
+
+  <section class="formula-box">
+    <h3>📐 Decomposition formula</h3>
+    <div class="formula-line">\[ y_t = \underbrace{a + b\cdot t}_{\text{trend}} + \underbrace{A\sin(2\pi t/24)}_{\text{cycle}} + \underbrace{\varepsilon_t}_{\text{noise}} \]</div>
+    <div class="symbol-list">
+      <div><strong>a, b</strong> <span>trend level + slope</span></div>
+      <div><strong>A</strong> <span>cycle amplitude</span></div>
+      <div><strong>t</strong> <span>time index (1, 2, …, n)</span></div>
+      <div><strong>ε_t</strong> <span>iid noise ~ N(0, σ²)</span></div>
+    </div>
+  </section>
+
+  <section class="diagnostic">
+    <h3>🔍 What to look for & how to read the chart</h3>
+    <ul>
+      <li><strong>Trend line</strong> shows the deterministic linear path; the gap between it and the observed series is cycle + noise.</li>
+      <li>When σ is large, the observed line wiggles around the trend; the underlying structure is hidden by noise.</li>
+      <li>Real economic series (GDP, inflation, unemployment) almost always combine all three components.</li>
+    </ul>
+  </section>
+
+  <section class="exam-trap">
+    <h3>⚠️ Exam trap</h3>
+    <div class="trap-block wrong"><div class="label">Student says</div><p>"Each observation is just a draw from the distribution, like any sample — I'll treat them as independent."</p></div>
+    <div class="trap-block why"><div class="label">Why this is wrong</div><p>Time-series observations are <em>ordered</em> and usually <em>dependent</em>. Treating them as iid invalidates standard errors and many test statistics.</p></div>
+    <div class="trap-block right"><div class="label">Correct interpretation</div><p>Always check for trend, autocorrelation, and stationarity before applying methods that assume independence.</p></div>
+  </section>
+
+  <section class="quiz-card">
+    <h2>📝 Mini-quiz</h2>
+    <div id="quiz"></div>
+  </section>
+
+  <section class="cheat-sheet">
+    <h2>📋 Cheat sheet</h2>
+    <table>
+      <thead><tr><th>Concept</th><th>Meaning</th><th>Exam tip</th></tr></thead>
+      <tbody>
+        <tr><td>Trend</td><td>Long-run direction</td><td>Linear vs stochastic — different treatments</td></tr>
+        <tr><td>Cycle / seasonality</td><td>Recurring pattern</td><td>Monthly = lag 12; quarterly = lag 4</td></tr>
+        <tr><td>Noise</td><td>Unforecastable irregular shocks</td><td>Should look like white noise in residuals</td></tr>
+        <tr><td>Ordering</td><td>Time index matters</td><td>Never shuffle a time series</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script src="../assets/js/common.js"></script>
+<script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(1);
+TSL.buildFooter(1);
+
+const els = {
+  trend: TSL.$('#trend'), amp: TSL.$('#amp'), sig: TSL.$('#sig'), n: TSL.$('#n'),
+  seed: TSL.$('#seed'), regen: TSL.$('#regen'),
+  vTrend: TSL.$('#vTrend'), vAmp: TSL.$('#vAmp'), vSig: TSL.$('#vSig'), vN: TSL.$('#vN'),
+  rTrend: TSL.$('#rTrend'), rSig: TSL.$('#rSig')
+};
+
+function refresh() {
+  const b = parseFloat(els.trend.value);
+  const A = parseFloat(els.amp.value);
+  const s = parseFloat(els.sig.value);
+  const n = parseInt(els.n.value);
+  const seed = parseInt(els.seed.value);
+  els.vTrend.textContent = b.toFixed(3);
+  els.vAmp.textContent = A.toFixed(1);
+  els.vSig.textContent = s.toFixed(2);
+  els.vN.textContent = n;
+  els.rTrend.textContent = b.toFixed(3);
+  els.rSig.textContent = s.toFixed(2);
+  const noise = TSL.generateWhiteNoise(n, s, seed);
+  const trend = Array.from({length: n}, (_, t) => b * t);
+  const cycle = Array.from({length: n}, (_, t) => A * Math.sin(2 * Math.PI * t / 24));
+  const observed = trend.map((v, i) => v + cycle[i] + noise[i]);
+  const x = Array.from({length: n}, (_, i) => i + 1);
+  TSL.plotMultiLine('chart', [
+    { x: x, y: observed, name: 'observed y_t', color: '#2563eb' },
+    { x: x, y: trend, name: 'trend', color: '#b45309', dash: 'dot' },
+    { x: x, y: cycle, name: 'cycle (centered)', color: '#0f766e', dash: 'dash' }
+  ], 'Components of a time series', 'value');
+}
+
+const refreshDeb = TSL.debounce(refresh, 100);
+['trend','amp','sig','n','seed'].forEach(id => TSL.$('#' + id).addEventListener('input', refreshDeb));
+els.regen.addEventListener('click', () => { els.seed.value = Math.floor(Math.random()*10000); refresh(); });
+
+// Defer initial render until after layout settles
+if (document.readyState === 'complete') requestAnimationFrame(() => setTimeout(refresh, 0));
+else window.addEventListener('load', () => requestAnimationFrame(() => setTimeout(refresh, 0)));
+
+TSL.Quiz.render('#quiz', [
+  { q: 'Which feature is MOST distinctive of time-series data vs cross-sectional data?', options: ['Observations are ordered through time and usually dependent', 'Sample size is larger', 'Variables are always financial', 'Means are zero'], correct: 0, explain: 'Time ordering + temporal dependence are what make time series special.' },
+  { q: 'If the noise σ doubles, the visible structure (trend/cycle) becomes ____', options: ['Easier to see', 'Harder to see', 'Unchanged', 'Inverted'], correct: 1, explain: 'Higher noise variance obscures the underlying signal.' },
+  { q: 'True or false: shuffling the time index does NOT change what models like ARIMA can find.', options: ['True', 'False'], correct: 1, explain: 'False — ARIMA, autocorrelation, and forecasts ALL depend on the order.' },
+  { q: 'A series y_t = 0.05·t + ε_t (σ small) plotted over 200 periods would look most like:', options: ['Flat noise around zero', 'A clear upward straight line with noise around it', 'Pure oscillation', 'A jagged random walk'], correct: 1, explain: 'Deterministic linear trend dominates when σ is small.' }
+], 'ch01');
+</script>
+</body>
+</html>

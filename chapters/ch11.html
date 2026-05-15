@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 11: AR(p) Models — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part IV · Chapter 11</div>
+<h1>Autoregressive (AR) Models</h1>
+<p class="intuition">The current value depends on its own past plus a shock. The parameter φ controls how long memory of past values persists.</p>
+<div class="key-formula">\( y_t = c + \phi\, y_{t-1} + \varepsilon_t \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Simulate an AR(1) and interpret φ.</div>
+<div class="objective">Compute the half-life of a shock.</div>
+<div class="objective">Recognize AR(p) by PACF cutoff at lag p.</div>
+<div class="objective">Forecast: AR(1) decays geometrically toward the mean.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>AR(1) Persistence Slider</h3>
+<label>φ <span class="slider-row"><span>-0.95</span><span class="val" id="vP">0.7</span><span>0.99</span></span></label>
+<input type="range" id="phi" min="-0.95" max="0.99" step="0.01" value="0.7">
+<label>Shock σ <span class="slider-row"><span></span><span class="val" id="vS">1.0</span><span></span></span></label>
+<input type="range" id="sig" min="0.2" max="3" step="0.05" value="1">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="100" max="600" step="20" value="300">
+<label>Forecast horizon h <span class="slider-row"><span></span><span class="val" id="vH">30</span><span></span></span></label>
+<input type="range" id="h" min="1" max="50" step="1" value="30">
+<div class="seed-row">Seed: <input type="number" id="seed" value="4"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel"><div id="ts" class="plot"></div><div id="fc" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Live interpretation</h3>
+<div class="live-readout"><strong>φ:</strong> <span class="num" id="rP">—</span></div>
+<div class="live-readout"><strong>Half-life of a shock:</strong> <span class="num" id="hl">—</span> periods</div>
+<div class="live-readout"><strong>Unconditional variance:</strong> <span class="num" id="uv">—</span></div>
+<div id="warn"></div></div></section>
+
+<section class="formula-box"><h3>📐 AR(1) properties</h3>
+<div class="formula-line">\[ y_t=c+\phi y_{t-1}+\varepsilon_t,\quad |\phi|<1 \text{ for stationarity} \]</div>
+<div class="formula-line">\[ \rho(h)=\phi^h,\quad \text{Var}(y_t)=\frac{\sigma^2}{1-\phi^2},\quad \text{half-life}=\frac{\ln 0.5}{\ln \phi} \]</div>
+<div class="symbol-list">
+<div><strong>φ near 0</strong> <span>weak memory</span></div>
+<div><strong>φ near 1</strong> <span>strong persistence — near unit root</span></div>
+<div><strong>φ negative</strong> <span>oscillating series</span></div>
+<div><strong>φ = 1</strong> <span>UNIT ROOT — not stationary</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Forecast curve decays geometrically toward the mean — fast if φ small, slow if near 1.</li>
+<li>Forecast intervals widen and saturate at the unconditional variance.</li>
+<li>PACF should have a single significant spike at lag 1 (AR(1) signature).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"φ = 0.99 is stationary, so it behaves like any other AR(1)."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Near-unit-root persistence creates very long-lived shocks, near-non-stationary inference, and unreliable standard asymptotic properties.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Treat |φ| close to 1 as "near-integrated" — use robust inference, expect long half-lives, and consider unit-root testing.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Quantity</th><th>Formula</th></tr></thead><tbody>
+<tr><td>Mean</td><td>c / (1 − φ)</td></tr>
+<tr><td>Variance</td><td>σ² / (1 − φ²)</td></tr>
+<tr><td>ACF</td><td>ρ(h) = φ^h</td></tr>
+<tr><td>Half-life</td><td>ln(0.5) / ln(φ)</td></tr>
+<tr><td>PACF</td><td>cuts off at lag 1</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(11); TSL.buildFooter(11);
+function refresh(){
+  const phi=parseFloat(TSL.$('#phi').value), sig=parseFloat(TSL.$('#sig').value);
+  const n=parseInt(TSL.$('#n').value), h=parseInt(TSL.$('#h').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP').textContent=phi.toFixed(2); TSL.$('#vS').textContent=sig.toFixed(2);
+  TSL.$('#vN').textContent=n; TSL.$('#vH').textContent=h; TSL.$('#rP').textContent=phi.toFixed(2);
+  TSL.$('#hl').textContent= (phi>0 && phi<1) ? (Math.log(0.5)/Math.log(phi)).toFixed(2) : 'n/a';
+  TSL.$('#uv').textContent = Math.abs(phi)<1 ? (sig*sig/(1-phi*phi)).toFixed(2) : '∞ (non-stat)';
+  const warn = TSL.$('#warn');
+  warn.innerHTML = Math.abs(phi)>=1 ? '<div class="callout danger">⚠ Unit root or explosive — not stationary.</div>'
+                  : phi>0.97 ? '<div class="callout warning">⚠ Near-unit-root — very persistent.</div>'
+                  : '<div class="callout success">✓ Stationary AR(1).</div>';
+  const y = TSL.generateAR1(n, phi, sig, 0, seed);
+  TSL.plotLine('ts', null, y, 'Simulated AR(1)', 'y_t', '#2563eb');
+  const last = y[y.length-1];
+  const fc = TSL.forecastAR1(last, phi, h);
+  const ci = TSL.forecastIntervalAR1(sig, phi, h);
+  TSL.plotForecast('fc', y, fc, 'Forecast (mean reversion)', ci);
+  const a = TSL.acf(y, 20); TSL.plotACF('acf', a, 'ACF (geometric decay)', n);
+}
+['phi','sig','n','h','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'For AR(1) with φ=0.5, half-life ≈', options: ['0.5 periods','1 period','log(0.5)/log(0.5) = 1 period','5 periods'], correct: 2, explain: 'h* = ln 0.5 / ln 0.5 = 1.' },
+  { q: 'PACF of AR(p) cuts off at:', options: ['Lag 0','Lag p','Lag p+1','Never'], correct: 1, explain: 'AR(p) PACF cutoff at lag p.' },
+  { q: 'Multi-step AR(1) forecast converges to:', options: ['Last observation','Mean μ/(1−φ)','Zero','Infinity'], correct: 1, explain: 'Mean reversion to the long-run mean.' },
+  { q: 'φ = 1.0 means:', options: ['Stationary high persistence','Unit root (non-stationary)','Pure cycle','Mean zero'], correct: 1, explain: 'φ = 1 ⇒ random walk.' }
+], 'ch11');
+</script>
+</body></html>

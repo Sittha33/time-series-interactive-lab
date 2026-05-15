@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 19: Granger Causality — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VI · Chapter 19</div>
+<h1>Granger Causality</h1>
+<p class="intuition">x Granger-causes y if lagged x improves the forecast of y beyond what lagged y already provides. It's about PREDICTIVE content, not structural causation.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Set up restricted vs unrestricted regressions.</div>
+<div class="objective">Interpret F-tests for Granger causality.</div>
+<div class="objective">Avoid the trap of equating prediction with causation.</div>
+<div class="objective">Handle stationarity requirements.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Prediction Causality Lab</h3>
+<label><input type="checkbox" id="xPy" checked> x → y (x predicts y)</label>
+<label><input type="checkbox" id="yPx"> y → x (y predicts x)</label>
+<label>Strength of cross-lag <span class="slider-row"><span></span><span class="val" id="vS">0.5</span><span></span></span></label>
+<input type="range" id="strength" min="0" max="0.9" step="0.02" value="0.5">
+<label>Noise σ <span class="slider-row"><span></span><span class="val" id="vN">1.0</span><span></span></span></label>
+<input type="range" id="sig" min="0.2" max="3" step="0.05" value="1">
+<div class="seed-row">Seed: <input type="number" id="seed" value="19"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="ts" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Test results (pseudo)</h3>
+<div class="live-readout"><strong>x → y F-stat (pseudo):</strong> <span class="num" id="rF1">—</span></div>
+<div class="live-readout"><strong>y → x F-stat (pseudo):</strong> <span class="num" id="rF2">—</span></div>
+<div class="live-readout"><strong>Verdict:</strong> <span id="rV">—</span></div>
+<p class="muted">Crude SSR comparison; in Gretl use VAR + Granger test.</p></div></section>
+
+<section class="formula-box"><h3>📐 Granger test</h3>
+<div class="formula-line">\[ \text{Restricted: } y_t = \sum_{i=1}^p \alpha_i y_{t-i} + u_t \]</div>
+<div class="formula-line">\[ \text{Unrestricted: } y_t = \sum \alpha_i y_{t-i} + \sum \beta_j x_{t-j} + u_t \]</div>
+<div class="formula-line">\[ F = \frac{(SSR_R-SSR_U)/q}{SSR_U/(T-k)} \]</div>
+<div class="symbol-list">
+<div><strong>H₀</strong> <span>x does NOT Granger-cause y</span></div>
+<div><strong>Reject</strong> <span>x has predictive content</span></div>
+<div><strong>Both directions</strong> <span>feedback system</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>If x leads y in the plot, you'll likely reject "x does not Granger-cause y".</li>
+<li>Bidirectional rejection ⇒ feedback (no single causal direction identified).</li>
+<li>Granger requires stationary variables; use VECM-based test if I(1).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"x Granger-causes y, so x is the structural cause of y."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Granger causality is a statement about FORECAST IMPROVEMENT. It does NOT identify a structural causal mechanism. Reverse causality, omitted common factors can produce the same evidence.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Report "x has predictive content for y, conditional on lagged y." Structural causation requires identification (IV, sign restrictions, RCT).</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Concept</th><th>Note</th></tr></thead><tbody>
+<tr><td>Granger causality</td><td>Predictive content, not structural</td></tr>
+<tr><td>Test</td><td>F-test on cross-lag coefficients</td></tr>
+<tr><td>Bidirectional</td><td>Feedback system — common in macro</td></tr>
+<tr><td>Stationarity</td><td>Required — use differencing or VECM</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(19); TSL.buildFooter(19);
+function refresh(){
+  const xy=TSL.$('#xPy').checked, yx=TSL.$('#yPx').checked;
+  const s=parseFloat(TSL.$('#strength').value), sig=parseFloat(TSL.$('#sig').value);
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vS').textContent=s.toFixed(2); TSL.$('#vN').textContent=sig.toFixed(2);
+  const rn=TSL.seededRandn(seed); const n=200;
+  const x=new Array(n).fill(0), y=new Array(n).fill(0);
+  for (let t=1;t<n;t++){
+    x[t] = 0.3*x[t-1] + (yx? s*y[t-1]:0) + sig*rn();
+    y[t] = 0.3*y[t-1] + (xy? s*x[t-1]:0) + sig*rn();
+  }
+  TSL.plotMultiLine('ts', [{ y: x, name: 'x', color: '#2563eb' }, { y: y, name: 'y', color: '#b45309' }], 'Bivariate system', 'value');
+  // Pseudo F: compare SSR of y~y_{t-1} vs y~y_{t-1}+x_{t-1}
+  function pseudoF(target, predictor){
+    const yl = target.slice(1), yL = target.slice(0,-1), xL = predictor.slice(0,-1);
+    const r1 = TSL.simpleOLS(yL, yl);
+    // unrestricted: use OLS of yl on [yL, xL] (handcoded 2-regressor via projections)
+    const my=TSL.mean(yl), mYL=TSL.mean(yL), mXL=TSL.mean(xL);
+    // simple proj approx: use multiple regression via centered formula
+    let sxx=0,sxz=0,szz=0,sxy=0,szy=0;
+    for (let i=0;i<yl.length;i++){
+      const a=yL[i]-mYL, b=xL[i]-mXL, c=yl[i]-my;
+      sxx+=a*a; szz+=b*b; sxz+=a*b; sxy+=a*c; szy+=b*c;
+    }
+    const det=sxx*szz - sxz*sxz;
+    if (Math.abs(det) < 1e-10) return 0; // near-singular, no information
+    const b1=(szz*sxy - sxz*szy)/det, b2=(sxx*szy - sxz*sxy)/det;
+    const a0 = my - b1*mYL - b2*mXL;
+    let ssrU=0, ssrR=0;
+    for (let i=0;i<yl.length;i++){
+      const yhatU = a0 + b1*yL[i] + b2*xL[i];
+      ssrU += (yl[i]-yhatU)**2;
+      ssrR += r1.residuals[i]*r1.residuals[i];
+    }
+    const k=3, q=1, T=yl.length;
+    return ((ssrR-ssrU)/q) / (ssrU/(T-k));
+  }
+  const F1=pseudoF(y, x), F2=pseudoF(x, y);
+  TSL.$('#rF1').textContent=F1.toFixed(2);
+  TSL.$('#rF2').textContent=F2.toFixed(2);
+  const sig5=3.89; // F(1,~200) 5% ~ 3.89
+  let v;
+  if (F1>sig5 && F2>sig5) v='Bidirectional Granger causality (feedback)';
+  else if (F1>sig5) v='x Granger-causes y (predictive)';
+  else if (F2>sig5) v='y Granger-causes x (predictive)';
+  else v='Neither direction significant';
+  TSL.$('#rV').textContent=v;
+}
+['xPy','yPx','strength','sig','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Granger causality establishes:', options: ['Structural causation','Predictive content','Random correlation','Stationarity'], correct: 1, explain: 'Forecast improvement only.' },
+  { q: 'If x → y AND y → x both reject, the system is:', options: ['Independent','A feedback loop','Stationary','Cointegrated'], correct: 1, explain: 'Bidirectional Granger = feedback.' },
+  { q: 'Granger test requires:', options: ['Normal residuals','Stationary variables','Zero mean','Infinite sample'], correct: 1, explain: 'Otherwise spurious test results.' }
+], 'ch19');
+</script>
+</body></html>

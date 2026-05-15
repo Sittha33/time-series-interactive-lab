@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 20: Cointegration — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VI · Chapter 20</div>
+<h1>Cointegration</h1>
+<p class="intuition">Two I(1) variables can drift forever, yet their linear combination stays stationary — they share a long-run equilibrium. Think of a rubber band: variables move apart but are pulled back.</p>
+<div class="key-formula">\( e_t = y_t - \alpha - \beta x_t \;\;\text{is}\;\; I(0) \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Distinguish cointegrated from spuriously co-moving I(1) variables.</div>
+<div class="objective">Run the Engle-Granger two-step procedure.</div>
+<div class="objective">Read the cointegrating residual / spread.</div>
+<div class="objective">Recognize the use of correct critical values.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Rubber Band Simulator</h3>
+<label>Mode</label>
+<select id="mode"><option value="coint">Cointegrated</option><option value="ind">Independent random walks</option></select>
+<label>β (long-run) <span class="slider-row"><span></span><span class="val" id="vB">1.0</span><span></span></span></label>
+<input type="range" id="beta" min="-2" max="3" step="0.05" value="1">
+<label>Spread σ (stationary noise) <span class="slider-row"><span></span><span class="val" id="vS">0.5</span><span></span></span></label>
+<input type="range" id="sig" min="0.1" max="2" step="0.05" value="0.5">
+<label>n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="100" max="600" step="20" value="300">
+<div class="seed-row">Seed: <input type="number" id="seed" value="20"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="series" class="plot"></div><div id="resid" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Engle-Granger diagnostics</h3>
+<div class="live-readout"><strong>Estimated β:</strong> <span class="num" id="rB">—</span></div>
+<div class="live-readout"><strong>R² of levels OLS:</strong> <span class="num" id="rR2">—</span></div>
+<div class="live-readout"><strong>Residual lag-1 ACF:</strong> <span class="num" id="rA">—</span></div>
+<div class="live-readout"><strong>Verdict:</strong> <span id="rV">—</span></div>
+<p class="muted">Stationary residual ⇒ cointegration. Non-stationary residual ⇒ spurious.</p></div></section>
+
+<section class="formula-box"><h3>📐 Engle-Granger 2-step</h3>
+<div class="formula-line">\[ 1.\;\hat e_t = y_t - \hat\alpha - \hat\beta x_t \qquad 2.\;\text{ADF on } \hat e_t \]</div>
+<div class="symbol-list">
+<div><strong>H₀ (step 2)</strong> <span>residual has unit root (no cointegration)</span></div>
+<div><strong>5% critical (k=1)</strong> <span>≈ −3.37 (shifted ADF)</span></div>
+<div><strong>5% critical (k=2)</strong> <span>≈ −3.74</span></div>
+<div><strong>Johansen</strong> <span>multivariate, multiple cointegrating vectors</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Cointegrated: y and x wander together; their spread oscillates around zero (stationary).</li>
+<li>Independent: spread wanders just like the levels — no equilibrium force.</li>
+<li>High R² in levels means little if residuals are non-stationary.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"R² = 0.98 ⇒ cointegrated."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>High R² in levels regression is necessary but NOT sufficient. The test is on residual stationarity, not on fit.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Run Engle-Granger ADF on residuals (use shifted critical values). Stationary residuals ⇒ cointegration. Then estimate ECM.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Case</th><th>Action</th></tr></thead><tbody>
+<tr><td>Both I(0)</td><td>OLS in levels OK</td></tr>
+<tr><td>Both I(1), residual I(0)</td><td>Cointegrated → ECM</td></tr>
+<tr><td>Both I(1), residual I(1)</td><td>Spurious → difference</td></tr>
+<tr><td>Mixed I(0)/I(1)</td><td>ARDL bounds test</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(20); TSL.buildFooter(20);
+function refresh(){
+  const mode=TSL.$('#mode').value, beta=parseFloat(TSL.$('#beta').value);
+  const sig=parseFloat(TSL.$('#sig').value), n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vB').textContent=beta.toFixed(2); TSL.$('#vS').textContent=sig.toFixed(2); TSL.$('#vN').textContent=n;
+  const p = TSL.generatePairRW(n, mode==='coint', beta, sig, seed);
+  TSL.plotMultiLine('series', [{ y: p.x, name: 'x', color: '#2563eb' }, { y: p.y, name: 'y', color: '#b45309' }], 'Two I(1) series', 'value');
+  const r = TSL.simpleOLS(p.x, p.y);
+  TSL.plotResidual('resid', r.residuals, 'Cointegrating residual y - α - βx');
+  const a = TSL.acf(r.residuals, 20);
+  TSL.plotACF('acf', a, 'ACF of residuals', n);
+  TSL.$('#rB').textContent=r.beta.toFixed(3);
+  TSL.$('#rR2').textContent=r.rSquared.toFixed(3);
+  TSL.$('#rA').textContent=a[0].toFixed(3);
+  const v = (mode==='coint' && a[0]<0.9) ? '<span class="success">✓ Residual mean-reverts ⇒ cointegrated</span>' : '<span class="danger">✗ Residual wanders ⇒ spurious / no cointegration</span>';
+  TSL.$('#rV').innerHTML=v;
+}
+['mode','beta','sig','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Cointegration requires:', options: ['Both I(0)','Both I(1) with stationary linear combination','Both I(2)','One I(0) and one I(1)'], correct: 1, explain: 'Standard definition.' },
+  { q: 'Engle-Granger uses which critical values for residual ADF?', options: ['Ordinary ADF criticals','Shifted (more negative) criticals','Normal distribution','Chi-square'], correct: 1, explain: 'Estimated residuals require shifted critical values.' },
+  { q: 'High R² in levels alone proves cointegration?', options: ['Yes','No'], correct: 1, explain: 'You also need stationary residuals.' }
+], 'ch20');
+</script>
+</body></html>

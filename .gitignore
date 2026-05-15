@@ -1,0 +1,6 @@
+check_ids.js
+*.docx
+*.pdf
+.DS_Store
+Thumbs.db
+node_modules/

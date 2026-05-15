@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 10: Unit Roots & Differencing — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part III · Chapter 10</div>
+<h1>Unit Roots and Differencing</h1>
+<p class="intuition">If a series has a unit root, shocks accumulate forever and the series is non-stationary. Differencing — Δy_t = y_t − y_{t-1} — turns I(1) into I(0).</p>
+<div class="key-formula">\( \Delta y_t = y_t - y_{t-1} \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Recognize unit-root behavior visually and via ADF.</div>
+<div class="objective">Apply first and second differencing.</div>
+<div class="objective">Avoid over-differencing.</div>
+<div class="objective">Read ADF p-values correctly (H₀ = unit root).</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Differencing Visualizer</h3>
+<label>Process</label>
+<select id="proc"><option value="rw">Random walk</option><option value="rwd">RW with drift</option><option value="ar">Stationary AR(1), φ=0.7</option></select>
+<label>d (differences) <span class="slider-row"><span>0</span><span class="val" id="vD">1</span><span>2</span></span></label>
+<input type="range" id="d" min="0" max="2" step="1" value="1">
+<label>Sample n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="100" max="600" step="20" value="300">
+<div class="seed-row">Seed: <input type="number" id="seed" value="13"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel"><div id="orig" class="plot"></div><div id="diff" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>ADF intuition</h3>
+<div class="live-readout" id="verdict">—</div>
+<p class="muted">ADF H₀: unit root (non-stationary). Reject ⇒ stationary. Apply to LEVEL first; if fails to reject, difference and retry.</p></div></section>
+
+<section class="formula-box"><h3>📐 ADF test</h3>
+<div class="formula-line">\[ \Delta y_t = \alpha + \beta t + \gamma\, y_{t-1} + \sum_{i=1}^{p}\delta_i\Delta y_{t-i}+\varepsilon_t \]</div>
+<div class="symbol-list">
+<div><strong>H₀</strong> <span>γ = 0 (unit root)</span></div>
+<div><strong>H₁</strong> <span>γ &lt; 0 (stationary)</span></div>
+<div><strong>5% τ_μ</strong> <span>≈ −2.88 (constant only)</span></div>
+<div><strong>5% τ_τ</strong> <span>≈ −3.44 (constant + trend)</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>RW level wanders; first difference looks like white noise.</li>
+<li>If you over-difference (d=2 on an AR(1)), you create artificial θ near −1 in MA.</li>
+<li>Always test ADF on level first; difference only if you fail to reject.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"ADF p-value = 0.50 means there IS a unit root."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Failing to reject H₀ is not the same as proving H₀. It just means insufficient evidence to declare stationarity at the chosen level.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>"We fail to reject the unit-root null at the 5% level; series is likely non-stationary." Pair with KPSS for confirmation.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Integration</th><th>Treatment</th></tr></thead><tbody>
+<tr><td>I(0)</td><td>Use directly (ARMA)</td></tr>
+<tr><td>I(1)</td><td>First difference → ARMA on Δy</td></tr>
+<tr><td>I(2)</td><td>Second difference (rare in finance)</td></tr>
+<tr><td>Over-diff signature</td><td>MA(1) θ ≈ −1</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(10); TSL.buildFooter(10);
+function refresh(){
+  const proc=TSL.$('#proc').value, d=parseInt(TSL.$('#d').value);
+  const n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vD').textContent=d; TSL.$('#vN').textContent=n;
+  let y;
+  if (proc==='rw') y=TSL.generateRandomWalk(n,0,1,seed);
+  else if (proc==='rwd') y=TSL.generateRandomWalk(n,0.05,1,seed);
+  else y=TSL.generateAR1(n,0.7,1,0,seed);
+  const dy = d===0 ? y : TSL.difference(y, d);
+  TSL.plotLine('orig', null, y, 'Original ('+proc+')', 'y_t', '#2563eb');
+  TSL.plotLine('diff', null, dy, 'After differencing d='+d, 'Δ^'+d+' y_t', '#b45309');
+  const a=TSL.acf(dy, 20); TSL.plotACF('acf', a, 'ACF of differenced series', dy.length);
+  let v;
+  if (proc==='ar') v = d===0 ? 'AR(1) is already stationary ✓' : 'WARNING: AR(1) is stationary — differencing creates over-difference signature (MA θ ≈ −1).';
+  else v = d===0 ? 'Unit root likely — series wanders, ACF decays slowly.' : 'After differencing, series should look stationary (white-noise-like).';
+  TSL.$('#verdict').innerHTML='<strong>Verdict:</strong> '+v;
+}
+['proc','d','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'ADF null hypothesis H₀ is:', options: ['Stationarity','Unit root (non-stationary)','Normality','No autocorrelation'], correct: 1, explain: 'Reject H₀ ⇒ stationary.' },
+  { q: 'A random walk after first differencing becomes:', options: ['Still RW','White noise','Trend-stationary','I(2)'], correct: 1, explain: 'Δy_t = ε_t for a driftless RW.' },
+  { q: 'Differencing an already-stationary AR(1) creates:', options: ['No effect','Over-difference signature (MA near −1)','I(2)'], correct: 1, explain: 'Over-differencing creates MA θ ≈ −1.' }
+], 'ch10');
+</script>
+</body></html>

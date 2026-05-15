@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 2: Returns and Financial Data — TS Lab</title>
+<link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']] } };</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head>
+<body>
+<main class="page-shell">
+  <section class="hero-card">
+    <div class="ch-label">Part I · Chapter 2</div>
+    <h1>Returns and Financial Data</h1>
+    <p class="intuition">Prices typically drift like a random walk and are non-stationary; <strong>returns</strong> (especially log returns) are usually much closer to stationary and are the standard object of financial modeling.</p>
+    <div class="key-formula">\( r_t^{\text{log}} = 100 \cdot \ln(P_t / P_{t-1}) \approx 100 \cdot (P_t - P_{t-1})/P_{t-1} \)</div>
+  </section>
+
+  <section class="card">
+    <h2>Learning objectives</h2>
+    <div class="objectives-grid">
+      <div class="objective">Compute simple and log returns from price levels.</div>
+      <div class="objective">Understand why returns are preferred to prices for modeling.</div>
+      <div class="objective">Recognize stylized facts: volatility clustering, fat tails, weak return autocorrelation.</div>
+      <div class="objective">Convert between log returns (additive over time) and simple returns (multiplicative).</div>
+    </div>
+  </section>
+
+  <section class="lab-grid">
+    <div class="control-panel">
+      <h3>Price → Return Converter</h3>
+      <label>Starting price <span class="slider-row"><span></span><span class="val" id="vP0">100</span><span></span></span></label>
+      <input type="range" id="p0" min="10" max="500" step="5" value="100">
+      <label>Drift μ (per period, %) <span class="slider-row"><span>-1</span><span class="val" id="vMu">0.05</span><span>+1</span></span></label>
+      <input type="range" id="mu" min="-1" max="1" step="0.01" value="0.05">
+      <label>Volatility σ (per period, %) <span class="slider-row"><span>0.1</span><span class="val" id="vSig">1.5</span><span>5</span></span></label>
+      <input type="range" id="sig" min="0.1" max="5" step="0.05" value="1.5">
+      <label>Sample size n <span class="slider-row"><span>50</span><span class="val" id="vN">250</span><span>500</span></span></label>
+      <input type="range" id="n" min="50" max="500" step="10" value="250">
+      <label>Return type</label>
+      <select id="rType"><option value="log">Log return (recommended)</option><option value="simple">Simple return</option></select>
+      <div class="seed-row">Seed: <input type="number" id="seed" value="42"> <button id="regen">🔄 Regenerate</button></div>
+    </div>
+    <div class="chart-panel">
+      <div id="chartP" class="plot"></div>
+      <div id="chartR" class="plot"></div>
+    </div>
+    <div class="interpretation-panel">
+      <h3>Live stats</h3>
+      <div class="live-readout"><strong>Price end value:</strong> <span class="num" id="endP">—</span></div>
+      <div class="live-readout"><strong>Mean return:</strong> <span class="num" id="meanR">—</span> %</div>
+      <div class="live-readout"><strong>Std-dev (vol):</strong> <span class="num" id="stdR">—</span> %</div>
+      <div class="live-readout"><strong>Excess kurtosis:</strong> <span class="num" id="kurt">—</span></div>
+      <p class="muted">Returns oscillate around the drift; prices wander. Excess kurtosis &gt; 0 hints at fat tails.</p>
+    </div>
+  </section>
+
+  <section class="formula-box">
+    <h3>📐 Return formulas</h3>
+    <div class="formula-line">\[ r_t^{\text{simple}} = \frac{P_t - P_{t-1}}{P_{t-1}}, \qquad r_t^{\text{log}} = \ln \frac{P_t}{P_{t-1}} \]</div>
+    <div class="formula-line">\[ \text{Multi-period: } r_{0\to T}^{\text{log}} = \sum_{t=1}^{T} r_t^{\text{log}} \quad (\text{additive}) \]</div>
+    <div class="symbol-list">
+      <div><strong>P_t</strong> <span>price at time t</span></div>
+      <div><strong>simple ≈ log</strong> <span>for small returns</span></div>
+      <div><strong>log additive</strong> <span>cumulates by summing</span></div>
+      <div><strong>simple multiplicative</strong> <span>(1+r₁)(1+r₂)…−1</span></div>
+    </div>
+  </section>
+
+  <section class="diagnostic">
+    <h3>🔍 What to look for</h3>
+    <ul>
+      <li>Price chart drifts and wanders — characteristic of a random walk with drift.</li>
+      <li>Return chart oscillates around zero (or a small mean) — much more stationary-looking.</li>
+      <li>If σ is large, returns show occasional extreme spikes — fat tails / excess kurtosis.</li>
+    </ul>
+  </section>
+
+  <section class="exam-trap">
+    <h3>⚠️ Exam trap</h3>
+    <div class="trap-block wrong"><div class="label">Student says</div><p>"A −40% return followed by a +40% return cancels back to the start."</p></div>
+    <div class="trap-block why"><div class="label">Why this is wrong</div><p>Simple returns compound multiplicatively: 0.6 × 1.4 = 0.84 → still −16% from start. Log returns ADD over time but a −0.51 then +0.34 don't sum to 0.</p></div>
+    <div class="trap-block right"><div class="label">Correct interpretation</div><p>Use log returns for time aggregation; recovering from a loss requires a larger percentage gain.</p></div>
+  </section>
+
+  <section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+  <section class="cheat-sheet">
+    <h2>📋 Cheat sheet</h2>
+    <table>
+      <thead><tr><th>Property</th><th>Price level</th><th>Return</th></tr></thead>
+      <tbody>
+        <tr><td>Stationary?</td><td>Usually NO (I(1))</td><td>Usually YES (I(0))</td></tr>
+        <tr><td>Mean</td><td>Drifts</td><td>≈ 0 (or small positive)</td></tr>
+        <tr><td>Variance</td><td>Grows over time</td><td>Roughly constant (but clusters!)</td></tr>
+        <tr><td>Model</td><td>Random walk</td><td>White noise / ARCH-GARCH for variance</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+
+<script src="../assets/js/common.js"></script>
+<script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script>
+<script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(2); TSL.buildFooter(2);
+
+const E = ['p0','mu','sig','n','rType','seed'].reduce((a,k)=>{a[k]=TSL.$('#'+k);return a;},{});
+function refresh(){
+  const P0 = parseFloat(E.p0.value);
+  const mu = parseFloat(E.mu.value) / 100;
+  const sig = parseFloat(E.sig.value) / 100;
+  const n = parseInt(E.n.value);
+  const type = E.rType.value;
+  const seed = parseInt(E.seed.value);
+  TSL.$('#vP0').textContent = P0;
+  TSL.$('#vMu').textContent = (mu*100).toFixed(2);
+  TSL.$('#vSig').textContent = (sig*100).toFixed(2);
+  TSL.$('#vN').textContent = n;
+  const rn = TSL.seededRandn(seed);
+  const prices = [P0];
+  for (let i=1;i<n;i++) prices.push(prices[i-1] * Math.exp(mu - 0.5*sig*sig + sig*rn()));
+  const returns = [];
+  for (let i=1;i<n;i++) returns.push(type==='log' ? 100*Math.log(prices[i]/prices[i-1]) : 100*(prices[i]-prices[i-1])/prices[i-1]);
+  TSL.plotLine('chartP', null, prices, 'Synthetic price path', 'price', '#2563eb');
+  TSL.plotLine('chartR', null, returns, type==='log'?'Log returns (%)':'Simple returns (%)', 'return %', '#b45309');
+  TSL.$('#endP').textContent = prices[prices.length-1].toFixed(2);
+  TSL.$('#meanR').textContent = TSL.mean(returns).toFixed(3);
+  TSL.$('#stdR').textContent = TSL.stddev(returns).toFixed(3);
+  TSL.$('#kurt').textContent = TSL.kurtosis(returns).toFixed(2);
+}
+const refreshDeb = TSL.debounce(refresh, 100);
+['p0','mu','sig','n','rType','seed'].forEach(id => TSL.$('#'+id).addEventListener('input', refreshDeb));
+TSL.$('#regen').addEventListener('click', ()=>{ E.seed.value = Math.floor(Math.random()*10000); refresh(); });
+refresh();
+
+TSL.Quiz.render('#quiz', [
+  { q: 'Which transformation is most likely to give a stationary series?', options: ['Price levels', 'Log returns', 'Squared prices', 'Cumulative prices'], correct: 1, explain: 'Returns are usually I(0); prices are usually I(1).' },
+  { q: 'A stock loses 50% then gains 50%. The final position is:', options: ['Back to the starting price', '−25% from start', '+25% from start', '−50% from start'], correct: 1, explain: '0.5 × 1.5 = 0.75 → 25% loss.' },
+  { q: 'Log returns are PREFERRED for time aggregation because they are:', options: ['Always positive', 'Additive over time', 'Multiplicative', 'Equal to simple returns'], correct: 1, explain: 'Σ log returns = log of cumulative price ratio.' },
+  { q: 'High excess kurtosis in returns means:', options: ['Returns are skewed', 'Fat tails — extreme moves more likely than under a normal', 'Mean is zero', 'No autocorrelation'], correct: 1, explain: 'Excess kurtosis > 0 = fatter tails than normal.' }
+], 'ch02');
+</script>
+</body>
+</html>

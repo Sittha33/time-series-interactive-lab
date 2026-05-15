@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 23: Impulse Response Functions — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VII · Chapter 23</div>
+<h1>Impulse Response Functions</h1>
+<p class="intuition">An IRF traces the dynamic ripple of a one-time shock through a VAR system. Shape, sign, and persistence reveal how shocks propagate — but identification (e.g. Cholesky ordering) matters.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Read IRF shape: monotonic decay, hump, oscillation, explosive.</div>
+<div class="objective">Understand Cholesky ordering and its caveats.</div>
+<div class="objective">Interpret confidence bands.</div>
+<div class="objective">Distinguish IRF from a structural causal claim.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Shock Ripple Simulator</h3>
+<label>Decay (persistence) <span class="slider-row"><span></span><span class="val" id="vD">0.70</span><span></span></span></label>
+<input type="range" id="dec" min="-0.95" max="1.05" step="0.01" value="0.7">
+<label>Initial impact <span class="slider-row"><span></span><span class="val" id="vI">1.0</span><span></span></span></label>
+<input type="range" id="imp" min="-2" max="2" step="0.05" value="1">
+<label>Oscillation?</label>
+<select id="osc"><option value="0">No</option><option value="1">Yes (negative coefficient)</option></select>
+<label>Show 95% band</label>
+<select id="band"><option value="0">Off</option><option value="1">On</option></select>
+<button id="regen">🔄 Recompute</button></div>
+<div class="chart-panel"><div id="irf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Shape diagnosis</h3>
+<div class="live-readout" id="diag">—</div>
+<p class="muted">Persistence close to 1 ⇒ very slow decay. Negative coefficient ⇒ oscillating IRF. |decay|≥1 ⇒ explosive (model is non-stationary).</p></div></section>
+
+<section class="formula-box"><h3>📐 IRF for AR(1) example</h3>
+<div class="formula-line">\[ \frac{\partial y_{t+h}}{\partial \varepsilon_t} = \phi^h \cdot \text{(impact)} \]</div>
+<div class="formula-line">\[ \text{For VAR: } IRF_h = \Phi^h \cdot e_i \text{ where } \Phi = A_1 \text{ in VAR(1)} \]</div>
+<div class="symbol-list">
+<div><strong>Decay rate</strong> <span>governed by persistence</span></div>
+<div><strong>Shape</strong> <span>monotonic / hump / oscillating / explosive</span></div>
+<div><strong>Cholesky</strong> <span>orders shocks via lower-triangular variance decomposition</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Positive persistence + positive coefficient ⇒ monotonic geometric decay.</li>
+<li>Negative coefficient ⇒ alternating signs (oscillation).</li>
+<li>|persistence| ≥ 1 ⇒ explosive — VAR is non-stationary.</li>
+<li>Wide confidence bands ⇒ low precision; bands crossing zero ⇒ effect not significant at h.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Cholesky IRFs are assumption-free."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Cholesky imposes a recursive ordering — i.e., assumptions about which variable cannot react to another within the same period. Different orderings give different IRFs.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Always state the identification assumption (ordering). Use sign-restrictions or structural VAR for stronger identification.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>IRF feature</th><th>Cause</th></tr></thead><tbody>
+<tr><td>Monotonic decay</td><td>0 &lt; φ &lt; 1</td></tr>
+<tr><td>Oscillating decay</td><td>−1 &lt; φ &lt; 0</td></tr>
+<tr><td>Hump-shaped</td><td>Higher-order dynamics</td></tr>
+<tr><td>Explosive</td><td>|φ| ≥ 1 (unstable)</td></tr>
+<tr><td>Bands crossing zero</td><td>Effect insignificant at h</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(23); TSL.buildFooter(23);
+function refresh(){
+  let dec=parseFloat(TSL.$('#dec').value);
+  const imp=parseFloat(TSL.$('#imp').value);
+  const osc=TSL.$('#osc').value==='1';
+  const band=TSL.$('#band').value==='1';
+  if (osc) dec = -Math.abs(dec);
+  TSL.$('#vD').textContent=dec.toFixed(2);
+  TSL.$('#vI').textContent=imp.toFixed(2);
+  const H=24;
+  const irf = new Array(H);
+  for (let h=0;h<H;h++) irf[h] = imp * Math.pow(dec, h);
+  const traces=[{ y: irf, name: 'IRF', color: '#7c3aed' }, { y: new Array(H).fill(0), name: 'zero', color: '#94a3b8', dash: 'dot' }];
+  if (band){
+    const ci = irf.map((v,h)=> 0.6*Math.sqrt(h+1)*Math.abs(imp));
+    const upper = irf.map((v,i)=>v+ci[i]);
+    const lower = irf.map((v,i)=>v-ci[i]);
+    traces.push({ x: Array.from({length:H},(_,i)=>i+1).concat(Array.from({length:H},(_,i)=>H-i)), y: upper.concat(lower.slice().reverse()), name: '95% band', color: 'rgba(124,58,237,0.15)', mode: 'lines' });
+  }
+  TSL.plotMultiLine('irf', traces, 'Impulse response over horizon h', 'response');
+  let txt;
+  if (Math.abs(dec)>=1) txt='⚠ EXPLOSIVE — non-stationary VAR.';
+  else if (dec>0) txt='Monotonic geometric decay (positive persistence).';
+  else txt='Oscillating decay (negative persistence) — alternating signs.';
+  TSL.$('#diag').innerHTML='<strong>Shape:</strong> '+txt;
+}
+['dec','imp','osc','band'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,80)));
+TSL.$('#regen').addEventListener('click', refresh);
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Cholesky IRF ordering implies:', options: ['No assumptions','Recursive contemporaneous restrictions','Causal identification proved','Stationarity'], correct: 1, explain: 'Triangular ordering = recursive assumption.' },
+  { q: 'An IRF that grows without bound indicates:', options: ['Strong causation','Non-stationary VAR (|φ|≥1)','Cointegration','Good model'], correct: 1, explain: 'Unstable system.' },
+  { q: 'Confidence band crossing zero at horizon h means:', options: ['Definitely zero','Estimated effect not statistically significant at h','Significant effect','Bad data'], correct: 1, explain: 'Cannot reject zero effect at that horizon.' }
+], 'ch23');
+</script>
+</body></html>

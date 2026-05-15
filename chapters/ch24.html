@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 24: VECM — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part VII · Chapter 24</div>
+<h1>Vector Error Correction Models</h1>
+<p class="intuition">VECM = VAR + cointegration. When I(1) variables share a long-run equilibrium, modeling in differences alone throws away that information. VECM keeps both short-run dynamics AND long-run pull-back.</p>
+<div class="key-formula">\( \Delta Y_t = \Pi\, Y_{t-1} + \Gamma_1 \Delta Y_{t-1} + u_t,\;\; \Pi = \alpha \beta' \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Recognize when VAR / VAR-in-differences / VECM is correct.</div>
+<div class="objective">Read the rank r of Π as the number of cointegrating vectors.</div>
+<div class="objective">Interpret α (adjustment speeds) and β (long-run coefficients).</div>
+<div class="objective">Avoid using VECM when cointegration fails.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>VAR vs VECM Decision</h3>
+<label>Variable stationarity</label>
+<select id="stat"><option value="I0">All I(0)</option><option value="I1">All I(1)</option></select>
+<label>Cointegration?</label>
+<select id="coint"><option value="no">No</option><option value="yes">Yes</option></select>
+<label>Cointegration rank r</label>
+<select id="rank"><option>0</option><option selected>1</option><option>2</option></select>
+<label>Adjustment α (for y) <span class="slider-row"><span></span><span class="val" id="vA">-0.30</span><span></span></span></label>
+<input type="range" id="alpha" min="-1" max="0.5" step="0.02" value="-0.3">
+<label>Long-run β <span class="slider-row"><span></span><span class="val" id="vB">1.0</span><span></span></span></label>
+<input type="range" id="beta" min="-2" max="3" step="0.05" value="1">
+<div class="seed-row">Seed: <input type="number" id="seed" value="24"> <button id="regen">🔄</button></div></div>
+<div class="chart-panel"><div id="series" class="plot"></div><div id="ect" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Decision output</h3>
+<div class="live-readout" id="rec">—</div>
+<p class="muted">If I(0): plain VAR. If I(1) & not cointegrated: VAR in differences. If I(1) & cointegrated: VECM with rank r.</p></div></section>
+
+<section class="formula-box"><h3>📐 VECM</h3>
+<div class="formula-line">\[ \Delta Y_t = \alpha\, \beta' Y_{t-1} + \sum_{i=1}^{p-1}\Gamma_i \Delta Y_{t-i} + u_t \]</div>
+<div class="symbol-list">
+<div><strong>β</strong> <span>long-run cointegrating vectors (r × k)</span></div>
+<div><strong>α</strong> <span>adjustment speeds (k × r)</span></div>
+<div><strong>Π = αβ'</strong> <span>long-run impact matrix; rank r</span></div>
+<div><strong>Johansen test</strong> <span>determines r (trace / max eigenvalue)</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 What to look for</h3><ul>
+<li>Cointegrated series drift together; their ECT (β'Y_{t-1}) mean-reverts.</li>
+<li>Negative α brings y back to equilibrium after shocks.</li>
+<li>Rank 0 → use VAR in differences. Rank k → series already stationary (VAR in levels).</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"All variables are I(1) so I'll fit VAR in differences."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Differencing throws away long-run cointegrating information. Always TEST for cointegration first (Johansen). If r ≥ 1, fit VECM.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Workflow: (1) ADF/KPSS on each variable. (2) Johansen trace + max-eigenvalue tests. (3) Choose VAR / VAR-diff / VECM based on rank.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Case</th><th>Model</th></tr></thead><tbody>
+<tr><td>All I(0)</td><td>VAR in levels</td></tr>
+<tr><td>All I(1), r = 0</td><td>VAR in first differences</td></tr>
+<tr><td>All I(1), 1 ≤ r &lt; k</td><td>VECM with rank r</td></tr>
+<tr><td>Mixed I(0)/I(1)</td><td>ARDL bounds approach</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(24); TSL.buildFooter(24);
+function refresh(){
+  const stat=TSL.$('#stat').value, coint=TSL.$('#coint').value, rank=parseInt(TSL.$('#rank').value);
+  const alpha=parseFloat(TSL.$('#alpha').value), beta=parseFloat(TSL.$('#beta').value);
+  const seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vA').textContent=alpha.toFixed(2); TSL.$('#vB').textContent=beta.toFixed(2);
+  let rec='';
+  if (stat==='I0') rec='✓ All variables I(0) → use plain VAR.';
+  else if (coint==='no' || rank===0) rec='All I(1), no cointegration → VAR in first differences.';
+  else rec='I(1) + cointegrated (rank '+rank+') → fit VECM with rank '+rank+'.';
+  TSL.$('#rec').innerHTML='<strong>Recommended model:</strong><br>'+rec;
+  // simulate cointegrated pair with VECM dynamics
+  const p = TSL.generatePairRW(200, coint==='yes' && rank>0 && stat==='I1', beta, 0.4, seed);
+  TSL.plotMultiLine('series', [{ y: p.x, name: 'x', color: '#2563eb' }, { y: p.y, name: 'y', color: '#b45309' }], 'Sample VECM-like dynamics', 'value');
+  const ect = p.y.map((v,i)=>v - beta*p.x[i]);
+  TSL.plotResidual('ect', ect, 'Equilibrium error (β\'Y)');
+}
+['stat','coint','rank','alpha','beta','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'In Π = αβ\', rank(Π) tells you:', options: ['Number of variables','Number of cointegrating vectors','Number of lags','VAR order'], correct: 1, explain: 'Rank r = # cointegrating relationships.' },
+  { q: 'Johansen test determines:', options: ['Stationarity of each','Cointegration rank','Lag length','Forecasts'], correct: 1, explain: 'Trace and max-eigenvalue tests.' },
+  { q: 'Differencing cointegrated I(1) series throws away:', options: ['Short-run dynamics','Long-run equilibrium info','Variance','Mean'], correct: 1, explain: 'That is why VECM exists.' }
+], 'ch24');
+</script>
+</body></html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 8: Stationarity — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part III · Chapter 8</div>
+<h1>Stationarity</h1>
+<p class="intuition">A stationary process has stable mean, stable variance, and dependence that only depends on the GAP between observations — not on absolute time.</p>
+<div class="key-formula">\( E[y_t]=\mu,\; \mathrm{Var}(y_t)=\sigma^2,\; \mathrm{Cov}(y_t,y_{t-h})=\gamma(h) \)</div></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">State the three conditions for weak stationarity.</div>
+<div class="objective">Recognize stationary vs nonstationary patterns visually.</div>
+<div class="objective">Use rolling mean / std to diagnose.</div>
+<div class="objective">Connect non-stationarity to the need for differencing.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Process selector</h3>
+<label>Process</label>
+<select id="proc">
+<option value="wn">White noise (stationary)</option>
+<option value="ar">Stationary AR(1)</option>
+<option value="rw">Random walk (unit root)</option>
+<option value="rwd">RW with drift</option>
+<option value="tr">Trend-stationary</option>
+</select>
+<label>φ (AR or RW-drift) <span class="slider-row"><span>-0.95</span><span class="val" id="vP">0.6</span><span>0.99</span></span></label>
+<input type="range" id="phi" min="-0.95" max="0.99" step="0.01" value="0.6">
+<label>Drift / trend slope <span class="slider-row"><span></span><span class="val" id="vD">0.05</span><span></span></span></label>
+<input type="range" id="d" min="-0.2" max="0.2" step="0.005" value="0.05">
+<label>Sample size n <span class="slider-row"><span></span><span class="val" id="vN">300</span><span></span></span></label>
+<input type="range" id="n" min="50" max="600" step="10" value="300">
+<div class="seed-row">Seed: <input type="number" id="seed" value="2"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel">
+<div id="ts" class="plot"></div><div id="rm" class="plot"></div><div id="acf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Stationarity verdict</h3>
+<div class="live-readout" id="verdict">—</div>
+<p class="muted">Rolling mean drifting? variance growing? ACF slow-decaying? — signs of non-stationarity.</p></div></section>
+
+<section class="formula-box"><h3>📐 Weak stationarity</h3>
+<div class="formula-line">\[ \forall t,\; E[y_t]=\mu,\; \mathrm{Var}(y_t)=\sigma^2,\; \mathrm{Cov}(y_t,y_{t-h})=\gamma(h) \]</div>
+<div class="symbol-list">
+<div><strong>μ</strong> <span>constant mean over time</span></div>
+<div><strong>σ²</strong> <span>constant variance over time</span></div>
+<div><strong>γ(h)</strong> <span>covariance depends only on lag h</span></div>
+<div><strong>RW: Var(y_t)=tσ²</strong> <span>variance grows linearly ⇒ non-stationary</span></div></div></section>
+
+<section class="diagnostic"><h3>🔍 Diagnostic checklist</h3>
+<ul>
+<li>Plot the series — does the mean look stable?</li>
+<li>Rolling mean & std — do they drift or grow?</li>
+<li>ACF — does it die quickly (stationary) or slowly (unit root)?</li>
+<li>ADF / KPSS tests (formal) — covered in Ch 10.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"Random walk has zero drift, so its mean is zero, so it's stationary."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>Although a driftless RW has E[y_t]=0, its variance Var(y_t)=tσ² GROWS with time, so it violates weak stationarity.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>All three conditions (mean, variance, covariance structure) must hold for stationarity. RW fails on variance.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Process</th><th>Stationary?</th><th>Why</th></tr></thead><tbody>
+<tr><td>White noise</td><td>YES</td><td>iid with finite variance</td></tr>
+<tr><td>AR(1), |φ|<1</td><td>YES</td><td>shocks decay</td></tr>
+<tr><td>Random walk</td><td>NO</td><td>variance grows</td></tr>
+<tr><td>Trend-stationary</td><td>NO until detrended</td><td>mean increases with t</td></tr>
+<tr><td>AR(1), φ=1</td><td>NO (unit root)</td><td>shocks accumulate</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(8); TSL.buildFooter(8);
+function refresh(){
+  const proc=TSL.$('#proc').value, phi=parseFloat(TSL.$('#phi').value);
+  const d=parseFloat(TSL.$('#d').value), n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP').textContent=phi.toFixed(2); TSL.$('#vD').textContent=d.toFixed(3); TSL.$('#vN').textContent=n;
+  let y;
+  if (proc==='wn') y=TSL.generateWhiteNoise(n,1,seed);
+  else if (proc==='ar') y=TSL.generateAR1(n,phi,1,0,seed);
+  else if (proc==='rw') y=TSL.generateRandomWalk(n,0,1,seed);
+  else if (proc==='rwd') y=TSL.generateRandomWalk(n,d,1,seed);
+  else { const wn=TSL.generateWhiteNoise(n,1,seed); y=wn.map((e,i)=>d*i+e); }
+  TSL.plotLine('ts', null, y, 'Series ('+proc+')', 'y_t', '#2563eb');
+  const rm=TSL.rollingMean(y, 30), rs=TSL.rollingStd(y, 30);
+  TSL.plotMultiLine('rm', [{ y: rm, name: 'rolling mean (30)', color: '#15803d' }, { y: rs, name: 'rolling std (30)', color: '#b91c1c' }], 'Rolling mean & std', 'value');
+  const a=TSL.acf(y, 20); TSL.plotACF('acf', a, 'Sample ACF', n);
+  let v='Stationary ✓';
+  if (proc==='rw' || proc==='rwd' || proc==='tr') v='Non-stationary ✗ (mean and/or variance shift over time)';
+  TSL.$('#verdict').innerHTML = '<strong>Verdict:</strong> <span class="num">'+v+'</span>';
+}
+['proc','phi','d','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'Which violates weak stationarity?', options: ['Constant mean','Variance growing with t','Constant covariance at fixed lag'], correct: 1, explain: 'Variance must be constant.' },
+  { q: 'A random walk has ACF that:', options: ['Cuts off at lag 1','Decays slowly','Is all zeros'], correct: 1, explain: 'Slow decay = unit-root signature.' },
+  { q: 'True/False: φ = 0.99 in AR(1) is still stationary.', options: ['True','False'], correct: 0, explain: '|φ|<1 ⇒ stationary, but very persistent.' }
+], 'ch08');
+</script>
+</body></html>

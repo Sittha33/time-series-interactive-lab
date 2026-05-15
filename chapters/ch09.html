@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 9: ACF and PACF — TS Lab</title><link rel="stylesheet" href="../assets/css/style.css">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+<script>window.MathJax={tex:{inlineMath:[['\\(','\\)']]}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
+</head><body><main class="page-shell">
+<section class="hero-card"><div class="ch-label">Part III · Chapter 9</div>
+<h1>ACF and PACF</h1>
+<p class="intuition">ACF tails off + PACF cuts off ⇒ AR. ACF cuts off + PACF tails off ⇒ MA. Both tail off ⇒ ARMA. This pattern recognition is half of model identification.</p></section>
+
+<section class="card"><h2>Learning objectives</h2><div class="objectives-grid">
+<div class="objective">Compute and read sample ACF and PACF.</div>
+<div class="objective">Apply the Box-Jenkins identification rules.</div>
+<div class="objective">Identify AR, MA, ARMA from their fingerprints.</div>
+<div class="objective">Distinguish significant lags from sampling noise.</div></div></section>
+
+<section class="lab-grid">
+<div class="control-panel"><h3>Pattern Matcher</h3>
+<label>Model</label>
+<select id="mod"><option value="ar1">AR(1)</option><option value="ar2">AR(2)</option><option value="ma1">MA(1)</option><option value="ma2">MA(2)</option><option value="arma">ARMA(1,1)</option></select>
+<label>φ₁ <span class="slider-row"><span></span><span class="val" id="vP1">0.7</span><span></span></span></label>
+<input type="range" id="phi1" min="-0.95" max="0.95" step="0.01" value="0.7">
+<label>φ₂ <span class="slider-row"><span></span><span class="val" id="vP2">-0.30</span><span></span></span></label>
+<input type="range" id="phi2" min="-0.8" max="0.8" step="0.01" value="-0.3">
+<label>θ₁ <span class="slider-row"><span></span><span class="val" id="vT1">0.6</span><span></span></span></label>
+<input type="range" id="th1" min="-0.95" max="0.95" step="0.01" value="0.6">
+<label>θ₂ <span class="slider-row"><span></span><span class="val" id="vT2">-0.30</span><span></span></span></label>
+<input type="range" id="th2" min="-0.95" max="0.95" step="0.01" value="-0.3">
+<label>Sample n <span class="slider-row"><span></span><span class="val" id="vN">400</span><span></span></span></label>
+<input type="range" id="n" min="100" max="800" step="20" value="400">
+<div class="seed-row">Seed: <input type="number" id="seed" value="8"> <button id="regen">🔄 Regenerate</button></div></div>
+<div class="chart-panel"><div id="ts" class="plot"></div><div id="acf" class="plot"></div><div id="pacf" class="plot"></div></div>
+<div class="interpretation-panel"><h3>Pattern reading</h3>
+<div class="live-readout" id="pattern">—</div>
+<p class="muted">ρ(h) bars beyond ±1.96/√n are statistically significant.</p></div></section>
+
+<section class="formula-box"><h3>📐 Box-Jenkins rules</h3>
+<table style="font-size:0.92rem; background:white; border-collapse:collapse; margin-top:6px;">
+<thead><tr><th>Process</th><th>ACF</th><th>PACF</th></tr></thead><tbody>
+<tr><td>AR(p)</td><td>tails off (decay)</td><td>CUTS off after lag p</td></tr>
+<tr><td>MA(q)</td><td>CUTS off after lag q</td><td>tails off (decay)</td></tr>
+<tr><td>ARMA(p,q)</td><td>tails off</td><td>tails off</td></tr>
+</tbody></table></section>
+
+<section class="diagnostic"><h3>🔍 How to read</h3><ul>
+<li>Count significant bars in PACF: gives candidate p.</li>
+<li>Count significant bars in ACF: gives candidate q.</li>
+<li>If both keep going, use ARMA — pick by AIC/BIC.</li>
+<li>Confidence band ±1.96/√n; spikes inside it are noise.</li></ul></section>
+
+<section class="exam-trap"><h3>⚠️ Exam trap</h3>
+<div class="trap-block wrong"><div class="label">Student says</div><p>"ACF spike at lag 2 → it's AR(2)."</p></div>
+<div class="trap-block why"><div class="label">Why this is wrong</div><p>ACF spike alone doesn't identify AR. AR(p) is characterized by PACF cutoff at lag p, not by an ACF spike. Could be MA(2) instead.</p></div>
+<div class="trap-block right"><div class="label">Correct interpretation</div><p>Use ACF and PACF TOGETHER. AR ↔ PACF cutoff. MA ↔ ACF cutoff.</p></div></section>
+
+<section class="quiz-card"><h2>📝 Mini-quiz</h2><div id="quiz"></div></section>
+
+<section class="cheat-sheet"><h2>📋 Cheat sheet</h2><table>
+<thead><tr><th>Pattern</th><th>Diagnosis</th></tr></thead><tbody>
+<tr><td>ACF decays, PACF spikes at lag 1</td><td>AR(1)</td></tr>
+<tr><td>ACF spikes at lag 1, PACF decays</td><td>MA(1)</td></tr>
+<tr><td>Both decay</td><td>ARMA — use AIC</td></tr>
+<tr><td>ACF decays VERY slowly</td><td>Suspect unit root — difference</td></tr></tbody></table></section>
+</main>
+<script src="../assets/js/common.js"></script><script src="../assets/js/simulations.js"></script>
+<script src="../assets/js/charts.js"></script><script src="../assets/js/quiz.js"></script>
+<script>
+TSL.buildNav(9); TSL.buildFooter(9);
+function refresh(){
+  const mod=TSL.$('#mod').value;
+  const phi1=parseFloat(TSL.$('#phi1').value), phi2=parseFloat(TSL.$('#phi2').value);
+  const th1=parseFloat(TSL.$('#th1').value), th2=parseFloat(TSL.$('#th2').value);
+  const n=parseInt(TSL.$('#n').value), seed=parseInt(TSL.$('#seed').value);
+  TSL.$('#vP1').textContent=phi1.toFixed(2); TSL.$('#vP2').textContent=phi2.toFixed(2);
+  TSL.$('#vT1').textContent=th1.toFixed(2); TSL.$('#vT2').textContent=th2.toFixed(2);
+  TSL.$('#vN').textContent=n;
+  let y;
+  if (mod==='ar1') y=TSL.generateAR1(n,phi1,1,0,seed);
+  else if (mod==='ar2') y=TSL.generateAR2(n,phi1,phi2,1,seed);
+  else if (mod==='ma1') y=TSL.generateMA1(n,th1,1,seed);
+  else if (mod==='ma2') y=TSL.generateMA2(n,th1,th2,1,seed);
+  else y=TSL.generateARMA11(n,phi1,th1,1,seed);
+  TSL.plotLine('ts', null, y, 'Simulated '+mod.toUpperCase(), 'y_t', '#2563eb');
+  const a=TSL.acf(y, 20); TSL.plotACF('acf', a, 'Sample ACF', n);
+  const p=TSL.pacf(y, 20); TSL.plotACF('pacf', p, 'Sample PACF', n);
+  let txt='';
+  if (mod.startsWith('ar')) txt='AR signature: PACF should CUT off; ACF should DECAY geometrically.';
+  else if (mod.startsWith('ma')) txt='MA signature: ACF should CUT off; PACF should DECAY.';
+  else txt='ARMA: BOTH ACF and PACF should tail off geometrically.';
+  TSL.$('#pattern').innerHTML='<strong>Expected fingerprint:</strong><br>'+txt;
+}
+['mod','phi1','phi2','th1','th2','n','seed'].forEach(id=>TSL.$('#'+id).addEventListener('input', TSL.debounce(refresh,100)));
+TSL.$('#regen').addEventListener('click', ()=>{TSL.$('#seed').value=Math.floor(Math.random()*10000); refresh();});
+refresh();
+TSL.Quiz.render('#quiz', [
+  { q: 'PACF cuts off at lag 2; ACF decays geometrically. Best guess:', options: ['MA(2)','AR(2)','ARMA(2,2)','Random walk'], correct: 1, explain: 'AR(p) ⇒ PACF cuts at lag p.' },
+  { q: 'ACF spikes only at lag 1, PACF tails off. Best guess:', options: ['AR(1)','MA(1)','White noise','RW'], correct: 1, explain: 'MA(q) ⇒ ACF cuts at lag q.' },
+  { q: 'Both ACF and PACF die slowly. You should:', options: ['Try ARMA(p,q) with multiple (p,q)','Pick MA(20)','Conclude white noise'], correct: 0, explain: 'Use AIC/BIC across ARMA candidates.' }
+], 'ch09');
+</script>
+</body></html>
